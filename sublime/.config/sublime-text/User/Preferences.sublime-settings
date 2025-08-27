@@ -2,7 +2,7 @@
   "color_scheme": "Nord.sublime-color-scheme",
   "theme": "Adaptive.sublime-theme",
   "font_face": "CaskaydiaCove Nerd Font Mono",        // or "Iosevka", "SF Mono"
-  "font_size": 16,
+  "font_size": 14,
 
   "translate_tabs_to_spaces": true,
   "tab_size": 2,
@@ -27,4 +27,10 @@
 
   // macOS: keep ctrl/cmd sane; on Linux adjust if desired
   "copy_with_empty_selection": true,
+  "added_words":
+  [
+		"dotfiles",
+    "symlink",
+    "symlinks",
+  ],
 }
