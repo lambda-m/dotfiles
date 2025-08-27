@@ -1,0 +1,45 @@
+{
+  "bootstrapped": true,
+  "installed_packages": [
+    "Package Control",
+
+    // Look & feel
+    "Nord",
+    "A File Icon",
+
+    // LSP & ecosystem
+    "LSP",
+    "LSP-json",
+    "LSP-yaml",
+    "LSP-pyright",
+    "LSP-gopls",
+    "LSP-powershell",
+
+    // Formatters / linters (via external tools)
+    "SublimeLinter",
+    "SublimeLinter-json",
+    "SublimeLinter-contrib-yamllint",
+
+    // Markdown
+    "MarkdownEditing",
+    "MarkdownPreview",
+    "markdownlint",     // uses Node markdownlint-cli if installed
+
+    // CSV & data
+    "Rainbow CSV",      // schema-aware CSV; SQL highlighting on selections
+    "Edit CSV",
+
+    // SQL
+    "SQLTools",         // run queries, connections
+    "SQLTools PostgreSQL",
+    "SQLTools SQLite",
+
+    // Utils
+    "Terminus",
+    "TrailingSpaces",
+    "GitGutter"
+  ],
+  "in_process_packages":
+  [
+  ],
+}

@@ -1,0 +1,7 @@
+theme = nord
+
+window-padding-x = 40
+window-padding-y = 20
+
+font-family = "CaskaydiaCove Nerd Font Mono"
+font-size = 16

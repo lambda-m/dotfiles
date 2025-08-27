@@ -1,0 +1,30 @@
+{
+  "color_scheme": "Nord.sublime-color-scheme",
+  "theme": "Adaptive.sublime-theme",
+  "font_face": "CaskaydiaCove Nerd Font Mono",        // or "Iosevka", "SF Mono"
+  "font_size": 16,
+
+  "translate_tabs_to_spaces": true,
+  "tab_size": 2,
+  "trim_trailing_white_space_on_save": "all",
+  "ensure_newline_at_eof_on_save": true,
+
+  "word_wrap": "auto",
+  "wrap_width": 0,
+  "rulers": [100],
+
+  "highlight_line": true,
+  "caret_extra_width": 1,
+  "draw_white_space": "selection",
+  "line_padding_bottom": 2,
+  "line_padding_top": 2,
+
+  "index_files": true,
+  "folder_exclude_patterns": [".git", "node_modules", "venv", ".venv", "target", "dist", ".mypy_cache", ".pytest_cache"],
+  "file_exclude_patterns": ["*.min.js", "*.log", "*.lock"],
+  "ignored_packages": ["Vintage",
+  ],
+
+  // macOS: keep ctrl/cmd sane; on Linux adjust if desired
+  "copy_with_empty_selection": true,
+}

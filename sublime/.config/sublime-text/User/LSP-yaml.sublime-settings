@@ -1,0 +1,6 @@
+{
+  "settings": {
+    "yaml.format.enable": true,
+    "yaml.validate": true
+  }
+}
