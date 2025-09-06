@@ -1,0 +1,12 @@
+# `~/.zsh/completion/_make`
+#compdef make
+
+_make() {
+  # Use `compadd` with the results of `make -qp`, which provides the targets.
+  # The `awk` command filters for valid targets and handles multiple targets on a single line.
+  local make_targets
+  make_targets=$(make -qp 2>/dev/null | awk -F ':' '/^[a-zA-Z0-9][^$#\/\t=]*:([^=]|$)/ {split($1, a, " "); for (i in a) print a[i]}')
+  compadd $make_targets
+}
+
+_make "$@"
