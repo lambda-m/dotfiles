@@ -1,8 +1,25 @@
-export PATH="$PATH:$HOME/.local/bin"
+# ---- PATH management helper ----
+path_add() {
+  case ":$PATH:" in
+    *":$1:"*) ;;
+    *) PATH="$1:$PATH" ;;
+  esac
+}
 
-### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
-export PATH="/Users/maarten/.rd/bin:$PATH"
-### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
+# ---- OS detection ----
+OS="$(uname -s)"
 
-# Added by LM Studio CLI (lms)
-export PATH="$PATH:/Users/maarten/.cache/lm-studio/bin"
+# ---- common paths ----
+path_add "$HOME/.local/bin"
+path_add "$HOME/go/bin"
+path_add "$HOME/.cache/lm-studio/bin"
+
+# ---- OS-specific ----
+if [ "$OS" = "Darwin" ]; then
+  path_add "$HOME/.rd/bin"
+fi
+
+# ---- user overrides ----
+[ -f "$HOME/.bashrc.local" ] && . "$HOME/.bashrc.local"
+
+export PATH
