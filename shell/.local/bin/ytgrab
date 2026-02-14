@@ -1,0 +1,480 @@
+#!/usr/bin/env bash
+# ytgrab — Canonical YouTube downloader + playlist symlinks
+#
+# - Canonical files:  <BASE>/<channel>/_all/<Title> [<ID>].<ext>
+# - Playlist links:   <BASE>/<channel>/<playlist_title>/<NNN - Title>.<ext>
+# - mtime set to upload/release date (and creation date on macOS if SetFile exists)
+# - Sources TSV:      type  url  title  channel  added
+# - Subcommands:      add | list | link | help  (no args = refresh all)
+
+set -euo pipefail
+shopt -s nullglob
+
+VERSION="1.0.10"
+printf '[ytgrab] version %s\n' "$VERSION"
+
+# ---------------- Config & State ----------------
+CONF_DIR="${CONF_DIR:-$HOME/.local/etc/ytgrab}"
+ENV_FILE="$CONF_DIR/ytgrab.env"
+SRC_FILE="$CONF_DIR/ytgrab.sources"
+
+BASE_DIR_DEFAULT="$HOME/Movies/youtube"
+COOKIES_BROWSER_DEFAULT="firefox"
+STATE_DIR_DEFAULT="$HOME/.local/state/ytgrab"
+ARCHIVE_DEFAULT="$STATE_DIR_DEFAULT/archive.txt"
+
+# ---------------- Utility Functions ----------------
+
+# Probe for required external dependencies
+check_dependencies() {
+  local missing=()
+  command -v yt-dlp >/dev/null || missing+=("yt-dlp")
+  command -v jq >/dev/null || missing+=("jq")
+
+  if [[ "${#missing[@]}" -gt 0 ]]; then
+    printf 'Error: The following required commands are missing from your system:\n' >&2
+    for cmd in "${missing[@]}"; do
+      printf '  - %s\n' "$cmd" >&2
+    done
+    printf '\nPlease install them and try an updated version of the script again.\n' >&2
+    exit 1
+  fi
+}
+
+# Resolve destination path for downloads, now strictly based on BASE_DIR
+resolve_dest() {
+  local channel="$1"
+  local subdir="$2"
+  local resolved_path="$BASE_DIR/$channel"
+
+  if [[ -n "$subdir" ]]; then
+    resolved_path="$resolved_path/$subdir"
+  fi
+
+  printf '%s' "$resolved_path"
+}
+
+# Set the modification and creation time of a file
+set_times() {
+  local time="$1"
+  local file="$2"
+  # Set modification time using touch
+  touch -t "$time" "$file" >/dev/null 2>&1 || true
+
+  # Set creation time on macOS
+  if command -v SetFile >/dev/null 2>&1; then
+    SetFile -d "$time" "$file" >/dev/null 2>&1 || true
+  fi
+}
+
+# ---------------- Core Logic ----------------
+
+# Download a single video, creating the canonical file
+download_canonical() {
+  local url="$1"
+  local outdir="$2"
+  mkdir -p "$outdir/_all"
+
+  printf '[ytgrab] downloading canonical file for %s\n' "$url"
+
+  yt-dlp \
+    -o "$outdir/_all/%(title)s [%(id)s].%(ext)s" \
+    --download-archive "$ARCHIVE" \
+    --add-metadata \
+    --embed-thumbnail \
+    --embed-chapters \
+    --cookies-from-browser "$COOKIES_BROWSER" \
+    --no-playlist \
+    --format "bestvideo[height<=1080]+bestaudio/best" \
+    "$url"
+}
+
+# Download all videos from a channel, creating canonical files
+download_channel() {
+  local url="$1"
+  local outdir="$2"
+  mkdir -p "$outdir/_all"
+
+  printf '[ytgrab] downloading all videos for channel from %s\n' "$url"
+
+  yt-dlp \
+    -o "$outdir/_all/%(title)s [%(id)s].%(ext)s" \
+    --download-archive "$ARCHIVE" \
+    --add-metadata \
+    --embed-thumbnail \
+    --embed-chapters \
+    --cookies-from-browser "$COOKIES_BROWSER" \
+    --yes-playlist \
+    --format "bestvideo[height<=1080]+bestaudio/best" \
+    "$url"
+}
+
+
+# Symlink a playlist, linking to the canonical files
+symlink_playlist() {
+  local url="$1"
+  local title="$2"
+  local channel="$3"
+  local outdir="$(resolve_dest "$channel" "$title")"
+
+  mkdir -p "$outdir"
+  [[ "$verbose" == "1" ]] && printf '[ytgrab] playlist title: %s\n' "$title"
+
+  # Check if the canonical directory exists first
+  local canonical_dir="$BASE_DIR/$channel/_all"
+  if [[ ! -d "$canonical_dir" ]]; then
+    printf '[ytgrab] Warning: Canonical directory for channel "%s" does not exist. Run "ytgrab" without arguments to download videos first.\n' "$channel" >&2
+    return 1
+  fi
+
+  [[ "$verbose" == "1" ]] && printf '[ytgrab] Debug: Searching for canonical files in: %s\n' "$canonical_dir"
+
+  # Fetch playlist info and check for errors. We use `|| true` to prevent `set -e` from exiting
+  # if `yt-dlp` returns a non-zero status code, so we can handle the error ourselves.
+  [[ "$verbose" == "1" ]] && printf '[ytgrab] Debug: Fetching playlist info for: %s\n' "$url"
+  local playlist_json
+  if ! playlist_json=$(yt-dlp --flat-playlist --dump-json "$url"); then
+    printf '[ytgrab] Error: Could not get valid playlist data for "%s". This might be a private or empty playlist.\n' "$title" >&2
+    return 1
+  fi
+
+  [[ "$verbose" == "1" ]] && printf '[ytgrab] Debug: Raw yt-dlp JSON:\n%s\n' "$playlist_json"
+
+  local created=0
+  local updated=0
+
+  # Process each video entry one by one from the `yt-dlp` output.
+  # The output is newline-separated JSON objects.
+  local counter=0
+  while IFS= read -r video_json; do
+    (( counter++ ))
+    local vid=$(echo "$video_json" | jq -r '.id')
+    local video_title=$(echo "$video_json" | jq -r '.title')
+    local upload_date=$(echo "$video_json" | jq -r '.upload_date')
+
+    [[ "$verbose" == "1" ]] && printf '[ytgrab] Debug: Processing video #%s, ID: %s, Title: "%s", Upload Date: "%s"\n' "$counter" "$vid" "$video_title" "$upload_date"
+
+    local symlink_file="$outdir/$(printf '%03d' "$counter") - ${video_title//\//-}"
+    local target=""
+
+    # Corrected find command with escaped brackets
+    local search_glob="*\[${vid}\].*"
+    [[ "$verbose" == "1" ]] && printf '[ytgrab] Debug: Using glob pattern: %s\n' "$search_glob"
+
+    find_result=$(find "$canonical_dir" -maxdepth 1 -type f -name "$search_glob" -print -quit)
+
+    if [[ -n "$find_result" ]]; then
+      target="$find_result"
+      [[ "$verbose" == "1" ]] && printf '[ytgrab] Debug: Match found: %s\n' "$target"
+    fi
+
+    if [[ -z "$target" || ! -e "$target" ]]; then
+      [[ "$verbose" == "1" ]] && printf '[ytgrab] skip: missing canonical for id=%s\n' "$vid"
+      continue
+    fi
+
+    local target_ext="${target##*.}"
+    local new_symlink_path="$symlink_file.$target_ext"
+
+    if [[ -L "$new_symlink_path" ]]; then
+      if [[ "$(readlink "$new_symlink_path")" == "$target" ]]; then
+        [[ "$verbose" == "1" ]] && printf '[ytgrab] skip: exists: %s\n' "$new_symlink_path"
+        continue
+      fi
+    fi
+
+    # Create the symlink
+    rm -f "$new_symlink_path"
+    ln -s "$target" "$new_symlink_path"
+    [[ "$verbose" == "1" ]] && printf '[ytgrab] Debug: Creating symlink from "%s" to "%s"\n' "$new_symlink_path" "$target"
+    (( created++ ))
+
+    # Set file times
+    set_times "${upload_date:0:8}" "$new_symlink_path"
+
+  done <<< "$playlist_json"
+
+  [[ "$verbose" == "1" ]] && printf '[ytgrab] link summary for "%s": created=%s\n' "$title" "$created"
+}
+
+# Download and/or symlink one URL
+process_one() {
+  local url="$1"
+
+  if [[ "$url" =~ ^https?://(www.)?youtube.com/channel/ ]]; then
+    # Download all videos from a channel
+    local channel_name
+    channel_name=$(yt-dlp --dump-json --playlist-end 1 "$url" | jq -r '.channel')
+    local canonical_dir="$(resolve_dest "$channel_name" "")"
+    download_channel "$url" "$canonical_dir"
+
+  elif [[ "$url" =~ ^https?://(www.)?youtube.com/playlist/?\?list= ]]; then
+    # Symlink a playlist
+    local playlist_info
+    playlist_info=$(yt-dlp --flat-playlist --dump-json --playlist-end 1 "$url" | jq -r '.playlist_title + "\t" + .channel')
+    local playlist_title=$(printf '%s' "$playlist_info" | cut -f1 -d$'\t')
+    local channel_name=$(printf '%s' "$playlist_info" | cut -f2 -d$'\t')
+
+    symlink_playlist "$url" "$playlist_title" "$channel_name"
+
+  elif [[ "$url" =~ ^https?://(www.)?youtube.com/watch ]]; then
+    # Download a single video
+    local video_info
+    video_info=$(yt-dlp --dump-json "$url" | jq -r '(.title + "\t" + .channel)')
+    local channel_name=$(printf '%s' "$video_info" | cut -f2 -d$'\t')
+    local canonical_dir="$(resolve_dest "$channel_name" "")"
+    download_canonical "$url" "$canonical_dir"
+  else
+    printf '[ytgrab] skip: unsupported URL format: %s\n' "$url"
+  fi
+}
+
+# ---------------- State Management ----------------
+
+# Add a source to the TSV file
+add_source() {
+  local url="$1"
+  local type=""
+  local title=""
+  local channel=""
+
+  if [[ "$url" =~ ^https?://(www.)?youtube.com/channel/ ]]; then
+    type="channel"
+    channel=$(yt-dlp --dump-json --playlist-end 1 "$url" | jq -r '.channel')
+    title="channel: $channel"
+  elif [[ "$url" =~ ^https?://(www.)?youtube.com/playlist/?\?list= ]]; then
+    type="playlist"
+    local playlist_info
+    playlist_info=$(yt-dlp --flat-playlist --dump-json --playlist-end 1 "$url" | jq -r '.playlist_title + "\t" + .channel')
+    title=$(printf '%s' "$playlist_info" | cut -f1 -d$'\t')
+    channel=$(printf '%s' "$playlist_info" | cut -f2 -d$'\t')
+  elif [[ "$url" =~ ^https?://(www.)?youtube.com/watch ]]; then
+    type="video"
+    local video_info
+    video_info=$(yt-dlp --dump-json --playlist-end 1 "$url" | jq -r '(.title + "\t" + .channel)')
+    title=$(printf '%s' "$video_info" | cut -f1 -d$'\t')
+    channel=$(printf '%s' "$video_info" | cut -f2 -d$'\t')
+  else
+    printf '[ytgrab] error: unsupported URL format: %s\n' "$url" >&2
+    exit 1
+  fi
+
+  if grep -q -F "$url" "$SRC_FILE" 2>/dev/null; then
+    printf '[ytgrab] skip: already in source file: %s\n' "$url"
+  else
+    printf '[ytgrab] added: %s\n' "$url"
+    printf '%s\t%s\t%s\t%s\t%s\n' "$type" "$url" "$title" "$channel" "$(date '+%Y-%m-%d')" >> "$SRC_FILE"
+  fi
+}
+
+# Process all sources from the TSV file for refresh
+process_sources_file_link() {
+  [[ ! -f "$SRC_FILE" ]] && { printf 'No sources to link. Add some with "ytgrab add <URL>".\n'; exit 0; }
+
+  while IFS=$'\t' read -r type url title channel added; do
+    if [[ "$type" == "playlist" ]]; then
+      symlink_playlist "$url" "$title" "$channel"
+    fi
+  done < "$SRC_FILE"
+}
+
+# Render a pretty list of sources
+render_list_pretty() {
+  [[ ! -f "$SRC_FILE" ]] && { printf 'No sources to list. Add some with "ytgrab add <URL>".\n'; exit 0; }
+
+  local line_count=0
+  local has_dest=0
+  local width_type=4 width_title=5 width_channel=7 width_added=5 width_url=3
+
+  while IFS=$'\t' read -r type url title channel added; do
+    if [[ ${#type} -gt $width_type ]]; then width_type=${#type}; fi
+    if [[ ${#title} -gt $width_title ]]; then width_title=${#title}; fi
+    if [[ ${#channel} -gt $width_channel ]]; then width_channel=${#channel}; fi
+    if [[ ${#added} -gt $width_added ]]; then width_added=${#added}; fi
+    if [[ ${#url} -gt $width_url ]]; then width_url=${#url}; fi
+    (( line_count++ ))
+  done < "$SRC_FILE"
+
+  # Print header
+  printf '%-*s  %-*s  %-*s  %-*s\n' "$width_type" "type" "$width_title" "title" "$width_channel" "channel" "$width_added" "added"
+
+  # Print each line
+  while IFS=$'\t' read -r type url title channel added; do
+    local url_emoji=""
+    local url_link=""
+    local reset_link=""
+
+    if [[ "$NO_EMOJI" == "0" ]]; then
+      case "$type" in
+        channel) url_emoji="🎬" ;;
+        playlist) url_emoji="🎶" ;;
+        video) url_emoji="▶️" ;;
+      esac
+    fi
+
+    if [[ "$NO_OSC8" == "0" ]]; then
+      url_link="\e]8;;${url}\a"
+      reset_link="\e]8;;\a"
+    fi
+
+    printf '%-*s %s %-*s  %-*s  %-*s\n' \
+      "$width_type" "$type" \
+      "${url_link}${url_emoji}${reset_link}" \
+      "$width_title" "$title" \
+      "$width_channel" "$channel" \
+      "$width_added" "$added"
+  done < "$SRC_FILE"
+}
+
+
+# ---------------- Main Script ----------------
+
+# Create directories and load configuration
+mkdir -p "$CONF_DIR" "$STATE_DIR_DEFAULT"
+
+if [[ ! -f "$ENV_FILE" ]]; then
+  cat >"$ENV_FILE" <<'EOF'
+# ytgrab defaults (edit as needed)
+# All content will be stored under this base directory.
+BASE_DIR="$HOME/Movies/youtube"
+# Browser to grab cookies from.
+COOKIES_BROWSER="firefox"
+# The location for state files, like the download archive.
+STATE_DIR="$HOME/.local/state/ytgrab"
+# The archive file to prevent re-downloading videos.
+ARCHIVE="$STATE_DIR/archive.txt"
+EOF
+fi
+
+# Load env (user can override defaults here)
+# shellcheck disable=SC1090
+source "$ENV_FILE"
+
+# Make sure BASE_DIR and STATE_DIR exist
+mkdir -p "$BASE_DIR" "$STATE_DIR"
+
+# Check for dependencies
+check_dependencies
+
+usage() {
+  cat <<EOF
+ytgrab: Canonical YouTube Downloader + Playlist Symlinker
+
+Usage: ytgrab <command> [arguments]
+
+Commands:
+  add <URL...>        Add one or more YouTube URLs (channel, playlist, or video) to the sources file.
+                      Example: ytgrab add https://www.youtube.com/@BenEater
+  list [--tsv|--no-emoji|--no-link]
+                      List all tracked sources.
+                      --tsv: Show raw tab-separated data.
+                      --no-emoji: Hide emojis in the output.
+                      --no-link: Hide terminal hyperlinks.
+  link [URL]          Creates symlinks for one or all tracked playlists.
+                      - If no URL is provided, it processes all playlists in the sources file.
+                      - If a URL is provided, it links just that playlist.
+  help                Show this help message.
+
+Environment Variables (set in '$ENV_FILE'):
+  BASE_DIR            Root directory for all downloads. Default: $BASE_DIR_DEFAULT
+  COOKIES_BROWSER     Browser for cookies. Default: $COOKIES_BROWSER_DEFAULT
+  ARCHIVE             Path to the download archive file. Default: $ARCHIVE_DEFAULT
+  YTGRAB_VERBOSE=1    Enable verbose output for debugging.
+EOF
+}
+
+verbose="${YTGRAB_VERBOSE:-0}"
+
+# New logic to handle implicit URL as a command
+if [[ $# -gt 0 && "$1" =~ ^https?://(www\.)?youtube\.com ]]; then
+  printf '[ytgrab] No subcommand found, assuming "add".\n'
+  add_source "$1"
+  process_one "$1"
+  exit 0
+fi
+
+if [[ $# -eq 0 ]]; then
+  printf '[ytgrab] refreshing all sources...\n'
+  if [[ ! -f "$SRC_FILE" ]]; then
+    printf 'No sources to process. Add some with "ytgrab add <URL>".\n'
+    exit 0
+  fi
+
+  printf '[ytgrab] Phase 1: Downloading canonical files...\n'
+  # Loop 1: Download all channels, playlists, and single videos first.
+  while IFS=$'\t' read -r type url title channel added; do
+    if [[ "$type" == "channel" ]]; then
+      download_channel "$url" "$(resolve_dest "$channel" "")"
+    elif [[ "$type" == "playlist" ]]; then
+      # Download all videos from playlist to create canonical files
+      download_channel "$url" "$(resolve_dest "$channel" "")"
+    elif [[ "$type" == "video" ]]; then
+      download_canonical "$url" "$(resolve_dest "$channel" "")"
+    fi
+  done < "$SRC_FILE"
+
+  printf '[ytgrab] Phase 2: Creating symlinks for playlists...\n'
+  # Loop 2: Symlink all playlists now that canonical files are present.
+  while IFS=$'\t' read -r type url title channel added; do
+    if [[ "$type" == "playlist" ]]; then
+      symlink_playlist "$url" "$title" "$channel"
+    fi
+  done < "$SRC_FILE"
+
+  printf '[ytgrab] Refresh complete.\n'
+  exit 0
+fi
+
+cmd="$1"
+case "$cmd" in
+  --help )
+    usage
+    ;;
+  list )
+    shift
+    show_tsv=0
+    NO_EMOJI="${NO_EMOJI:-0}"
+    NO_OSC8="${NO_OSC8:-0}"
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --tsv) show_tsv=1 ; shift;;
+        --no-emoji) NO_EMOJI=1 ; shift;;
+        --no-link) NO_OSC8=1 ; shift;;
+        *) printf 'Unknown flag for list: %s\n' "$1" >&2; exit 2 ;
+      esac
+    done
+    if (( show_tsv )); then
+      cat "$SRC_FILE"
+    else
+      render_list_pretty
+    fi
+    ;;
+  add )
+    shift
+    [[ $# -lt 1 ]] && { usage; exit 2; }
+    for u in "$@"; do
+      add_source "$u"
+    done
+    ;;
+  link )
+    shift
+    if [[ $# -eq 0 ]]; then
+      process_sources_file_link
+    else
+      for u in "$@"; do
+        process_one "$u" "link"
+      done
+    fi
+    ;;
+  refresh | update )
+    printf 'The "%s" command has been replaced by running "ytgrab" with no arguments.\n' "$cmd" >&2
+    printf 'Running a full refresh now...\n' >&2
+    shift
+    process_sources_file_link
+    ;;
+  * )
+    printf 'Unknown command: %s\n' "$cmd" >&2
+    usage >&2
+    exit 1
+    ;;
+esac

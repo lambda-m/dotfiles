@@ -37,3 +37,12 @@ precmd_functions+=(_update_virtual_env_prompt)
 fpath=(~/.zsh/completion $fpath)
 autoload -Uz compinit
 compinit
+
+# Optionally import ~/.local/profile.d/*.sh (fail silently)
+if [[ -d "$HOME/.local/profile.d" ]]; then
+  for f in "$HOME/.local/profile.d"/*.sh; do
+    [[ -e "$f" ]] || continue
+    source "$f"
+  done
+fi
+unset f

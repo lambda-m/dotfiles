@@ -19,6 +19,15 @@ if [ "$OS" = "Darwin" ]; then
   path_add "$HOME/.rd/bin"
 fi
 
+# ---- optional modular profile.d includes ----
+if [ -d "$HOME/.local/profile.d" ]; then
+  for f in "$HOME/.local/profile.d"/*.sh; do
+    [ -e "$f" ] || continue
+    . "$f"
+  done
+fi
+unset f
+
 # ---- user overrides ----
 [ -f "$HOME/.bashrc.local" ] && . "$HOME/.bashrc.local"
 

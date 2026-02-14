@@ -1,0 +1,1 @@
+alias ytgrab='noglob ytgrab'
