@@ -26,9 +26,10 @@
   (auto-package-update-maybe)
   (auto-package-update-at-time "09:00"))
 
-;; Set theme
-(use-package monokai-theme)
-(load-theme 'monokai t)
+;; Nord theme
+(use-package nord-theme
+  :config
+  (load-theme 'nord t))
 
 ;; All the icons
 (use-package all-the-icons
