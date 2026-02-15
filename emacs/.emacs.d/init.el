@@ -26,9 +26,10 @@
   (auto-package-update-maybe)
   (auto-package-update-at-time "09:00"))
 
-;; Set theme
-(use-package monokai-theme)
-(load-theme 'monokai t)
+;; Nord theme
+(use-package nord-theme
+  :config
+  (load-theme 'nord t))
 
 ;; All the icons
 (use-package all-the-icons
@@ -93,8 +94,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(neotree all-the-icons monokai-theme no-littering auto-package-update)))
+ '(package-selected-packages nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
