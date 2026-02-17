@@ -30,3 +30,8 @@ compinit
 # Optional local overrides (machine-specific)
 # --------------------------------------------------
 [ -f "$HOME/.zshrc.local" ] && . "$HOME/.zshrc.local"
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/maarten/.cache/lm-studio/bin"
+# End of LM Studio CLI section
+

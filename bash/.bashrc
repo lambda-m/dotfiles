@@ -32,3 +32,8 @@ unset f
 [ -f "$HOME/.bashrc.local" ] && . "$HOME/.bashrc.local"
 
 export PATH
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/maarten/.cache/lm-studio/bin"
+# End of LM Studio CLI section
+

@@ -13,3 +13,8 @@ unset f
 if [ -n "$BASH_VERSION" ]; then
   [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc"
 fi
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/maarten/.cache/lm-studio/bin"
+# End of LM Studio CLI section
+
