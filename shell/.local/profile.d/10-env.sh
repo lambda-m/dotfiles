@@ -1,7 +1,7 @@
 # Cross-shell environment
 
-export EDITOR="emacs -nw"
-export VISUAL="emacs"
+export EDITOR="emacs-cli"
+export VISUAL="emacs-cli"
 export PAGER="${PAGER:-less}"
 
 # Python
