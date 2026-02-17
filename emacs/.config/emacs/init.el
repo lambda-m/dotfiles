@@ -1,7 +1,19 @@
+;;; --- START SMART HEADER ---
+
+;; 1. Force state/junk to a local directory (not symlinked via Stow)
+(setq user-emacs-directory (expand-file-name "~/.local/state/emacs/"))
+(unless (file-exists-p user-emacs-directory)
+  (make-directory user-emacs-directory t))
+
+;; 2. Move the customization file (where Emacs writes UI changes) to state
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(when (file-exists-p custom-file)
+  (load custom-file))
+
+;;; --- END SMART HEADER ---
 
 ;; Initialize package sources
 (require 'package)
-
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                          ("org" . "https://orgmode.org/elpa/")
                          ("elpa" . "https://elpa.gnu.org/packages/")))
@@ -10,12 +22,20 @@
 (unless package-archive-contents
   (package-refresh-contents))
 
-;; Initialize use-package on non-Linux platforms
+;; Initialize use-package
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
 
 (require 'use-package)
 (setq use-package-always-ensure t)
+
+;; Initialize no-littering to keep remaining plugins in check
+(use-package no-littering
+  :demand t)
+
+;; Redirect auto-saves to the state directory
+(setq auto-save-file-name-transforms
+      `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
 
 (use-package auto-package-update
   :custom
@@ -35,35 +55,19 @@
 (use-package all-the-icons
   :if (display-graphic-p))
 
-;; Neotree for monkeys like me
+;; Neotree
 (use-package neotree)
 (global-set-key [f8] 'neotree-toggle)
 (setq neo-smart-open t)
 (setq neo-window-fixed-size nil)
 
-;; NOTE: If you want to move everything out of the ~/.emacs.d folder
-;; reliably, set `user-emacs-directory` before loading no-littering!
-;(setq user-emacs-directory "~/.cache/emacs")
-
-(use-package no-littering)
-
-;; no-littering doesn't set this by default so we must place
-;; auto save files in the same path as it uses for sessions
-(setq auto-save-file-name-transforms
-      `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
-
 (setq inhibit-startup-message t)
-
-(scroll-bar-mode -1)        ; Disable visible scrollbar
-(tool-bar-mode -1)          ; Disable the toolbar
-(tooltip-mode -1)           ; Disable tooltips
-(set-fringe-mode 10)        ; Give some breathing room
-
-(menu-bar-mode -1)            ; Disable the menu bar
-
-;; Set up the visible bell
+(scroll-bar-mode -1)
+(tool-bar-mode -1)
+(tooltip-mode -1)
+(set-fringe-mode 10)
+(menu-bar-mode -1)
 (setq visible-bell t)
-
 (column-number-mode)
 (global-display-line-numbers-mode t)
 
@@ -73,36 +77,21 @@
                 shell-mode-hook
                 treemacs-mode-hook
                 eshell-mode-hook
-		neotree-mode-hook))
+                neotree-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
-;; Make ESC quit prompts
+;; Keybindings
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-
-;; Parentheses... parentheses everywhere
 (global-set-key "[" 'insert-parentheses)
 (global-set-key "]" 'move-past-close-and-reindent)
 
-;; Use Meta with arrow keys to navigate windows
 (require 'windmove)
 (global-set-key (kbd "M-<up>") 'windmove-up)
 (global-set-key (kbd "M-<left>") 'windmove-left)
 (global-set-key (kbd "M-<right>") 'windmove-right)
 (global-set-key (kbd "M-<down>") 'windmove-down)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages nil))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
 
-;; Yaml to JSON shizzle
+;; Yaml to JSON
 (defun yaml-to-json ()
   (interactive)
   (let* ((original-buffer (current-buffer))
@@ -118,8 +107,6 @@
                 (insert converted-content))))
         (message "Conversion failed.")))))
 
-;; Adjust `json-to-yaml` similarly
-
 (defun json-to-yaml ()
   (interactive)
   (let* ((original-buffer (current-buffer))
@@ -131,7 +118,6 @@
           (progn
             (let ((converted-content (buffer-string)))
               (with-current-buffer original-buffer
-                ;;(erase-buffer)
                 (insert converted-content))))
         (message "Conversion failed.")))))
 

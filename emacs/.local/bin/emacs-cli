@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# 1. Find the best emacs binary
+if [ "$(uname)" = "Darwin" ] && [ -x "/opt/homebrew/bin/emacs" ]; then
+    EMACS_BIN="/opt/homebrew/bin/emacs"
+else
+    EMACS_BIN="emacs"
+fi
+
+# 2. Exec replaces the script process, passing all args properly.
+# We force -nw (no window) because that is your intent for CLI editing.
+exec "$EMACS_BIN" -nw "$@"
