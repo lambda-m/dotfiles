@@ -1,14 +1,22 @@
 ;;; --- START SMART HEADER ---
 
-;; 1. Force state/junk to a local directory (not symlinked via Stow)
+;; 1. Force all state/junk to a local directory (not symlinked via Stow)
 (setq user-emacs-directory (expand-file-name "~/.local/state/emacs/"))
+
+;; 2. FORCE the package manager to use the state directory for downloads
+;; This prevents "elpa" from appearing in your ~/.config/emacs/ symlinked folder
+(setq package-user-dir (expand-file-name "elpa" user-emacs-directory))
+
+;; 3. Move the customization file to the state directory
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+
+;; 4. Ensure the state directory exists
 (unless (file-exists-p user-emacs-directory)
   (make-directory user-emacs-directory t))
 
-;; 2. Move the customization file (where Emacs writes UI changes) to state
-(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-(when (file-exists-p custom-file)
-  (load custom-file))
+;; 5. Suppress annoying byte-compilation and native-compilation warnings
+(setq byte-compile-warnings '(not free-vars unresolved obsolete ignore))
+(setq native-comp-async-report-warnings-errors 'silent)
 
 ;;; --- END SMART HEADER ---
 
@@ -28,6 +36,11 @@
 
 (require 'use-package)
 (setq use-package-always-ensure t)
+
+;; Sync Emacs kill-ring with system clipboard in terminal
+(use-package xclip
+  :config
+  (xclip-mode 1))
 
 ;; Initialize no-littering to keep remaining plugins in check
 (use-package no-littering
@@ -61,6 +74,7 @@
 (setq neo-smart-open t)
 (setq neo-window-fixed-size nil)
 
+;; UI Tweaks
 (setq inhibit-startup-message t)
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
@@ -91,34 +105,37 @@
 (global-set-key (kbd "M-<right>") 'windmove-right)
 (global-set-key (kbd "M-<down>") 'windmove-down)
 
-;; Yaml to JSON
+;; Load custom file if it exists (keeps generated junk out of init.el)
+(when (file-exists-p custom-file)
+  (load custom-file))
+
+;; Yaml to JSON shizzle
 (defun yaml-to-json ()
+  "Convert current buffer from YAML to JSON using yq."
   (interactive)
-  (let* ((original-buffer (current-buffer))
-         (original-content (buffer-string))
+  (let* ((original-content (buffer-string))
          (conversion-command "yq eval -o=json"))
     (with-temp-buffer
       (insert original-content)
       (if (zerop (shell-command-on-region (point-min) (point-max) conversion-command nil t))
-          (progn
-            (let ((converted-content (buffer-string)))
-              (with-current-buffer original-buffer
-                (erase-buffer)
-                (insert converted-content))))
+          (let ((converted-content (buffer-string)))
+            (with-current-buffer (window-buffer)
+              (erase-buffer)
+              (insert converted-content)))
         (message "Conversion failed.")))))
 
 (defun json-to-yaml ()
+  "Convert current buffer from JSON to YAML using yq."
   (interactive)
-  (let* ((original-buffer (current-buffer))
-         (original-content (buffer-string))
+  (let* ((original-content (buffer-string))
          (conversion-command "yq eval --output-format=yaml"))
     (with-temp-buffer
       (insert original-content)
       (if (zerop (shell-command-on-region (point-min) (point-max) conversion-command nil t))
-          (progn
-            (let ((converted-content (buffer-string)))
-              (with-current-buffer original-buffer
-                (insert converted-content))))
+          (let ((converted-content (buffer-string)))
+            (with-current-buffer (window-buffer)
+              (erase-buffer)
+              (insert converted-content)))
         (message "Conversion failed.")))))
 
 (global-set-key (kbd "C-c y") 'yaml-to-json)
