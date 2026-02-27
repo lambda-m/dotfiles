@@ -1,12 +1,6 @@
-OS="$(uname -s)"
-
-# Emacs defaults to terminal
-if [ "$OS" = "Darwin" ]; then
-  alias emacs="/opt/homebrew/bin/emacs -nw"
-  alias emacs-gui="/opt/homebrew/bin/emacs"
-else
-  alias emacs="emacs -nw"
-fi
+# Emacs: connect to daemon, terminal mode, auto-start daemon if needed
+alias emacs='emacsclient -nw -a ""'
+alias emacs-gui='emacsclient -c -a ""'
 
 # your existing alias
 alias ytgrab='noglob ytgrab'
