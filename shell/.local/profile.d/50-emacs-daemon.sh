@@ -1,6 +1,7 @@
 # Start Emacs daemon if not already running
-if command -v emacs >/dev/null 2>&1; then
+# Use \emacs to bypass aliases (works in both bash and zsh)
+if \emacs --version >/dev/null 2>&1; then
   if ! pgrep -u "$USER" emacs >/dev/null 2>&1; then
-    command emacs --daemon >/dev/null 2>&1
+    \emacs --daemon >/dev/null 2>&1
   fi
 fi
