@@ -39,6 +39,7 @@
 
 ;; Sync Emacs kill-ring with system clipboard in terminal
 (use-package xclip
+  :if (or (display-graphic-p) (executable-find "xclip") (executable-find "xsel"))
   :config
   (xclip-mode 1))
 
@@ -76,10 +77,10 @@
 
 ;; UI Tweaks
 (setq inhibit-startup-message t)
-(scroll-bar-mode -1)
-(tool-bar-mode -1)
-(tooltip-mode -1)
-(set-fringe-mode 10)
+(when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+(when (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+(when (fboundp 'tooltip-mode) (tooltip-mode -1))
+(when (fboundp 'set-fringe-mode) (set-fringe-mode 10))
 (menu-bar-mode -1)
 (setq visible-bell t)
 (column-number-mode)
