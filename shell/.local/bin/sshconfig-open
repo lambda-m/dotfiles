@@ -1,0 +1,13 @@
+#!/bin/zsh
+set -euo pipefail
+
+host="${1:?missing host}"
+[[ "$host" =~ ^[A-Za-z0-9._-]+$ ]] || {
+  print -u2 "Invalid host alias: $host"
+  exit 1
+}
+
+ghostty_bin="/Applications/Ghostty.app/Contents/MacOS/ghostty"
+
+exec "$ghostty_bin" -e ssh "$host"
+

@@ -1,0 +1,37 @@
+upcloud token:
+ucat_01KJJ5QEWNFZ5BT4HTSN3CH1XY
+
+clouding token:
+EgrM6twTVCuXk8ZMQUgHauNYJhsbGsW1l03UMSKjtoQ=
+test-token-admin
+
+
+google
+KQrV5WKZls89#GEy
+maarten@lambda-m.nl
+
+Hetzner
+3v&dOloy82eLmySP
+
+rescue:
+user name "root" and the following password: 
+escue System (via Legacy/CSM) up since 2026-03-01 09:57 +01:00
+
+Hardware data:
+
+   CPU1: Intel(R) Xeon(R) W-2295 CPU @ 3.00GHz (Cores 36)
+   Memory:  257448 MB (ECC)
+   Disk /dev/nvme0n1: 3840 GB (=> 3576 GiB) doesn't contain a valid partition table
+   Disk /dev/nvme1n1: 3840 GB (=> 3576 GiB) doesn't contain a valid partition table
+   Disk /dev/sda: 3840 GB (=> 3576 GiB) doesn't contain a valid partition table
+   Disk /dev/sdb: 12 TB (=> 10 TiB) doesn't contain a valid partition table
+   Total capacity 21 TiB with 4 Disks
+
+Network data:
+   eth0  LINK: yes
+         MAC:  f0:2f:74:96:d8:d2
+         IP:   142.132.131.11
+         IPv6: 2a01:4f8:272:2766::2/64
+         Intel(R) Gigabit Ethernet Network Driver
+
+142.132.131.11

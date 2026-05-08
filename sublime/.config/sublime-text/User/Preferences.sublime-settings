@@ -2,7 +2,7 @@
   "color_scheme": "Nord.sublime-color-scheme",
   "theme": "Adaptive.sublime-theme",
   "font_face": "CaskaydiaCove Nerd Font Mono",        // or "Iosevka", "SF Mono"
-  "font_size": 28,
+  "font_size": 19,
 
   "translate_tabs_to_spaces": true,
   "tab_size": 2,

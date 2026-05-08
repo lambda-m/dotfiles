@@ -3,9 +3,15 @@ theme = nord
 window-padding-x = 40
 window-padding-y = 20
 
-font-family = "CaskaydiaCove Nerd Font Mono"
+font-family = "IosevkaTerm Nerd Font Mono"
 font-size = 16
 
 macos-option-as-alt = left
 
 scrollback-limit = 100000000
+
+cursor-click-to-move = true
+mouse-hide-while-typing = true
+
+# Quake/dropdown terminal from anywhere
+keybind = global:cmd+backquote=toggle_quick_terminal
