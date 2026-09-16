@@ -45,6 +45,21 @@ are appending to a symlink into this repo: move their line into
 `shell/.local/profile.d/00-path.sh` (guarded by `path_prepend`/`path_append`) and
 drop it from the rc file.
 
+## Updating an existing machine
+
+First time after these changes (no `dot` there yet):
+
+```
+cd ~/dotfiles && git pull && ./bootstrap.sh
+```
+
+`bootstrap.sh` unfolds a symlinked `~/.local` by itself (moving installer files
+to the real `~/.local`), restows, and sets the git options. Open a new shell:
+`dot` is on PATH from then on and the nudge is active. Afterwards it is only
+ever `dot sync`. If `git pull` refuses because of local edits, `git stash`
+first, or commit them with `git add -A && git commit -m wip` and let
+`dot sync` sort out the rest.
+
 ## Keeping machines in sync: `dot`
 
 `dot` (in `shell/.local/bin`) wraps the git dance so nothing has to be remembered:

@@ -11,6 +11,22 @@
 set -eu
 cd "$(dirname "$0")"
 
+# Repair a folded ~/.local from an earlier bare `stow shell`. Anything under
+# shell/.local that git does not track was dropped there by installers
+# (Claude Code, pipx, ...): move it to the real ~/.local before restowing.
+if [ -L "$HOME/.local" ]; then
+  echo "~/.local is a symlink into the repo; unfolding it" >&2
+  rm "$HOME/.local"
+  mkdir -p "$HOME/.local"
+  git ls-files -o --directory shell/.local | while IFS= read -r p; do
+    p=${p%/}
+    dest="$HOME/${p#shell/}"
+    echo "  moving $p -> $dest" >&2
+    mkdir -p "$(dirname "$dest")"
+    mv "$p" "$dest"
+  done
+fi
+
 mkdir -p "$HOME/.config" "$HOME/.local/bin" "$HOME/.local/share" "$HOME/.local/state"
 
 # Emacs only reads ~/.config/emacs when ~/.emacs.d and ~/.emacs do not exist.
