@@ -1,0 +1,154 @@
+#!/bin/sh
+# upd - "is anything outdated?" across the package managers on this machine.
+# Results are cached for a day; nothing is ever upgraded without asking.
+#
+#   upd                show cached results (runs a check first if there is no cache)
+#   upd check          refresh now: brew update + outdated, npm outdated -g, apt/dnf/pacman
+#   upd nudge          one stderr line if anything is outdated; refreshes in the
+#                      background when the cache is older than a day
+#   upd upgrade [mgr]  walk through each manager (or just <mgr>) and ask before upgrading
+#
+# Managers are detected with command -v: brew, npm (globals, except npm itself
+# which follows node), apt-get, dnf, pacman. Add one: a check_<name> function
+# that prints one outdated package per line, and an upgrade_<name> function.
+set -u
+
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/upd"
+STAMP="$STATE/last-check"
+MAX_AGE_MIN=1440
+mkdir -p "$STATE" 2>/dev/null || true
+
+usage() { sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; }
+has() { command -v "$1" >/dev/null 2>&1; }
+
+# ---------- checks: print "name  current -> latest" per outdated package ----------
+check_brew() {
+  brew update -q >/dev/null 2>&1
+  brew outdated --verbose 2>/dev/null
+}
+upgrade_brew() { brew upgrade; }
+
+check_npm() {
+  # table: Package Current Wanted Latest Location Depended-by
+  npm outdated -g 2>/dev/null | awk 'NR>1 && $1!="npm" {print $1"  "$2" -> "$4}'
+}
+upgrade_npm() {
+  for p in $(awk '{print $1}' "$STATE/npm"); do npm install -g "$p@latest"; done
+}
+
+check_apt() {
+  # Uses the package lists as last refreshed by `apt update` (Ubuntu/Debian
+  # refresh them daily via apt-daily.timer); simulation needs no root.
+  apt-get -s -o Debug::NoLocking=true upgrade 2>/dev/null \
+    | awk '/^Inst /{gsub(/[\[\]()]/,""); print $2"  "$3" -> "$4}'
+}
+upgrade_apt() { sudo apt-get update && sudo apt-get upgrade; }
+
+check_dnf() { dnf -q check-update 2>/dev/null | awk 'NF==3 && $1!~/^(Obsoleting|Last)/ {print $1"  -> "$2}'; }
+upgrade_dnf() { sudo dnf upgrade; }
+
+check_pacman() { if has checkupdates; then checkupdates 2>/dev/null; else pacman -Qu 2>/dev/null; fi; }
+upgrade_pacman() { sudo pacman -Syu; }
+
+managers() {
+  has brew    && echo brew
+  has npm     && echo npm
+  has apt-get && echo apt
+  has dnf     && echo dnf
+  has pacman  && echo pacman
+}
+
+# ---------- cache helpers ----------
+age_min() {  # minutes since last check, or 99999 if never
+  [ -f "$STAMP" ] || { echo 99999; return; }
+  echo $(( ( $(date +%s) - $(cat "$STAMP" 2>/dev/null || echo 0) ) / 60 ))
+}
+
+run_check() {  # run_check [quiet] -- refresh all managers, serialized by a lock
+  quiet=${1:-}
+  if ! mkdir "$STATE/lock" 2>/dev/null; then
+    # stale lock (older than an hour) -> take over, otherwise another check is running
+    if [ -n "$(find "$STATE/lock" -mmin +60 2>/dev/null)" ]; then rmdir "$STATE/lock" 2>/dev/null; mkdir "$STATE/lock" 2>/dev/null || return 0
+    else [ -n "$quiet" ] || echo "upd: a check is already running" >&2; return 0; fi
+  fi
+  trap 'rmdir "$STATE/lock" 2>/dev/null' EXIT INT TERM
+  for m in $(managers); do
+    [ -n "$quiet" ] || printf 'checking %s...\n' "$m"
+    "check_$m" > "$STATE/$m.tmp" 2>/dev/null
+    mv "$STATE/$m.tmp" "$STATE/$m"
+  done
+  date +%s > "$STAMP"
+  rmdir "$STATE/lock" 2>/dev/null
+  trap - EXIT INT TERM
+}
+
+count() {  # grep -c prints 0 on no match but exits 1, so do not chain on its status
+  if [ -f "$STATE/$1" ]; then grep -c . "$STATE/$1"; else echo 0; fi
+  return 0
+}
+
+summary() {  # "brew 2 (git, tmux), npm 1 (ccstatusline)" or empty
+  out=""
+  for m in $(managers); do
+    n=$(count "$m")
+    [ "$n" -gt 0 ] || continue
+    names=$(awk '{print $1}' "$STATE/$m" | head -3 | tr '\n' ',' | sed 's/,$//; s/,/, /g')
+    [ "$n" -gt 3 ] && names="$names, ..."
+    out="${out:+$out, }$m $n ($names)"
+  done
+  printf '%s' "$out"
+}
+
+# ---------- commands ----------
+cmd_status() {
+  [ -f "$STAMP" ] || run_check
+  a=$(age_min)
+  if [ "$a" -ge 60 ]; then when="$((a / 60))h ago"; else when="${a}m ago"; fi
+  echo "updates (checked $when; 'upd check' to refresh)"
+  any=0
+  for m in $(managers); do
+    n=$(count "$m")
+    if [ "$n" -gt 0 ]; then
+      any=1; printf '  %s: %s outdated\n' "$m" "$n"; sed 's/^/      /' "$STATE/$m"
+    else
+      printf '  %s: up to date\n' "$m"
+    fi
+  done
+  [ "$any" -eq 1 ] && echo "  -> upd upgrade"
+  return 0
+}
+
+cmd_nudge() {
+  if [ "$(age_min)" -ge "$MAX_AGE_MIN" ]; then
+    # Detach fully: survives the shell closing, never prints, never prompts.
+    ( nohup "$0" check --quiet </dev/null >/dev/null 2>&1 & )
+  fi
+  s=$(summary)
+  [ -n "$s" ] && printf 'updates: %s  ->  upd\n' "$s" >&2
+  return 0
+}
+
+cmd_upgrade() {
+  only=${1:-}
+  for m in $(managers); do
+    [ -z "$only" ] || [ "$m" = "$only" ] || continue
+    n=$(count "$m")
+    if [ "$n" -eq 0 ]; then printf '%s: up to date\n' "$m"; continue; fi
+    printf '%s: %s outdated\n' "$m" "$n"; sed 's/^/    /' "$STATE/$m"
+    printf 'upgrade with %s? [y/N] ' "$m"
+    read -r ans
+    case "$ans" in
+      y|Y|yes) "upgrade_$m" && "check_$m" > "$STATE/$m" 2>/dev/null ;;
+      *) echo "skipped $m" ;;
+    esac
+  done
+}
+
+case "${1:-status}" in
+  status|st)      cmd_status ;;
+  check)          shift; run_check "${1:-}"; [ "${1:-}" = "--quiet" ] || cmd_status ;;
+  nudge)          cmd_nudge ;;
+  upgrade|up)     shift; cmd_upgrade "${1:-}" ;;
+  -h|--help|help) usage ;;
+  *)              usage >&2; exit 2 ;;
+esac

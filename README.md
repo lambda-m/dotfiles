@@ -81,3 +81,21 @@ nudge says "unpulled", type `dots sync`. Done.
 
 Shared shell functions (`ta`, `mkcd`) live in `shell/.local/profile.d/20-functions.sh`
 and must stay POSIX; only completion goes in `.bashrc` / `.zshrc`.
+
+## What needs updating: `upd`
+
+`upd` (in `shell/.local/bin`) checks the package managers present on the machine:
+brew, global npm packages (ccstatusline lives there), apt, dnf, pacman.
+
+```
+upd            # cached results per manager
+upd check      # refresh now (brew update, npm outdated -g, ...)
+upd upgrade    # per manager: show the list, ask y/N, upgrade
+upd upgrade npm
+```
+
+Every interactive login prints one line on stderr when something is outdated
+(`profile.d/70-upd-nudge.sh`), e.g. `updates: brew 2 (git, tmux), npm 1 (ccstatusline) -> upd`.
+The expensive part (`brew update`, registry lookups) runs detached in the
+background at most once a day, so login stays instant. Nothing is upgraded
+unless you answer `y` in `upd upgrade`. Results live in `~/.local/state/upd`.
