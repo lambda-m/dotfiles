@@ -21,7 +21,9 @@ if [ "$OS" = "Darwin" ]; then
   path_prepend "/opt/homebrew/bin"
   path_prepend "/opt/homebrew/opt/libpq/bin"
   path_prepend "$HOME/.rd/bin"
+  # LM Studio CLI (lms): older installs used ~/.cache/lm-studio/bin, newer ~/.lmstudio/bin
   path_prepend "$HOME/.cache/lm-studio/bin"
+  path_append "$HOME/.lmstudio/bin"
 fi
 
 # --- Linux specific ---
