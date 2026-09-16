@@ -170,7 +170,15 @@ Pass package names to stow only those. If <code>git pull</code> refuses because 
 
   <div class="card"><h4>bash, zsh</h4>
     <p>Thin: bash has <code>ta</code> completion; zsh has the virtualenv-aware prompt, <code>compinit</code> with <code>~/.zsh/completion</code>
-    (custom <code>_make</code>), and <code>ta</code> completion. Both end by sourcing their <code>.local</code> file.</p></div>
+    (custom <code>_make</code>), <code>ta</code> completion, and <code>bindkey -e</code> so the line editor stays Emacs-style even when
+<code>$EDITOR</code> is vim. Both end by sourcing their <code>.local</code> file.</p>
+    <p>Both keep 50k lines of deduplicated history and, when <code>fzf</code> is installed, load its key bindings:</p>
+    <ul>
+      <li><kbd>Ctrl</kbd>+<kbd>R</kbd> fuzzy history: type to filter, arrows to move, <kbd>Enter</kbd> pastes onto the prompt (does not run),
+      <kbd>Esc</kbd> cancels, <kbd>Ctrl</kbd>+<kbd>R</kbd> again toggles time/relevance order. The key hint is shown in the picker.</li>
+      <li><kbd>Ctrl</kbd>+<kbd>T</kbd> insert a file path, <kbd>Alt</kbd>+<kbd>C</kbd> cd into a subdirectory.</li>
+    </ul>
+    <p>Uses <code>fzf --zsh</code>/<code>--bash</code> (fzf 0.48+), else the distro's <code>key-bindings</code> file. Commands starting with a space are not saved.</p></div>
 
   <div class="card"><h4>tmux</h4>
     <p><code>~/.config/tmux/tmux.conf</code> plus a <code>~/.tmux.conf</code> shim for old tmux. Nord theme, mouse on, 1-based indexes,
