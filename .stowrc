@@ -1,0 +1,5 @@
+# Read by stow when run from this directory (so: `cd ~/dotfiles && stow <pkg>`).
+# Target is always $HOME, regardless of where this repo is cloned.
+--target=$HOME
+# macOS Finder droppings inside packages must never be symlinked into $HOME.
+--ignore=\.DS_Store

@@ -1,4 +1,11 @@
 .DS_Store
+*~
+
+# ~/.local/{bin,share,state} are shared with installers (Claude Code, pipx, ...).
+# If stow ever folds ~/.local into a symlink, their files land here. Never track them.
+shell/.local/share/
+shell/.local/state/
+shell/.local/bin/claude
 
 emacs/.emacs.d/elpa/
 emacs/.emacs.d/auto-save-list/
