@@ -1,5 +1,8 @@
 # dotfiles
 
+**Lost? Open [MANUAL.html](MANUAL.html) in a browser** (`open ~/dotfiles/MANUAL.html`): one-page map of
+the repo, the `dots` and `upd` commands, per-package quirks, and fixes for the usual mishaps.
+
 My yearly reminder for [GNU stow](https://www.gnu.org/software/stow/) as I don't change machines that often..
 
 Mental model for me, stow <package> basically takes whatever is in the directory you call it from, in this case ~/dotfiles (but could be anywhere you clone this), then looks at whatever is in the <package> folder and symlinks from your actual $HOME to whatever is in the <package> folder.

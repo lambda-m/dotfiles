@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dotfiles manual</title>
+<style>
+  :root {
+    --bg: #eceff4; --panel: #ffffff; --fg: #2e3440; --muted: #4c566a;
+    --line: #d8dee9; --accent: #5e81ac; --accent2: #88c0d0; --code-bg: #e5e9f0;
+    --warn-bg: #fdf3e7; --warn-line: #d08770;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #2e3440; --panel: #3b4252; --fg: #eceff4; --muted: #d8dee9;
+      --line: #4c566a; --accent: #88c0d0; --accent2: #81a1c1; --code-bg: #434c5e;
+      --warn-bg: #4a4038; --warn-line: #d08770;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 24px 20px 60px; }
+  header { border-bottom: 2px solid var(--accent); padding-bottom: 8px; margin-bottom: 20px; }
+  header h1 { margin: 0; font-size: 26px; }
+  header p { margin: 4px 0 0; color: var(--muted); }
+  nav { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 12px 0 24px; font-size: 14px; }
+  nav a { color: var(--accent); text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  h2 { font-size: 19px; margin: 32px 0 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+  h3 { font-size: 15px; margin: 18px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  p { margin: 6px 0 10px; }
+  code, pre { font-family: "IosevkaTerm Nerd Font Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  pre { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent);
+    padding: 10px 14px; border-radius: 6px; overflow-x: auto; margin: 8px 0 14px; }
+  pre code { background: none; padding: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 14px; font-size: 14px; }
+  th, td { text-align: left; vertical-align: top; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; }
+  td:first-child { white-space: nowrap; }
+  .tldr { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; }
+  .tldr pre { margin: 6px 0; border-left-color: var(--accent2); }
+  .warn { background: var(--warn-bg); border-left: 4px solid var(--warn-line); padding: 8px 12px; border-radius: 4px; margin: 10px 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+  .card h4 { margin: 0 0 6px; font-size: 15px; }
+  .card p, .card ul { margin: 4px 0; font-size: 14px; }
+  .card ul { padding-left: 18px; }
+  a { color: var(--accent); }
+  kbd { font-family: inherit; font-size: 12.5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--panel); }
+  .flow { font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: var(--muted); white-space: pre; overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>dotfiles manual</h1>
+  <p>GNU Stow + git, shared by the Macs and the Linux VMs. Repo: <code>~/dotfiles</code>, branch <code>setup</code>.</p>
+</header>
+
+<nav>
+  <a href="#tldr">TL;DR</a>
+  <a href="#how">How it fits together</a>
+  <a href="#dots">dots</a>
+  <a href="#upd">upd</a>
+  <a href="#machines">New or existing machine</a>
+  <a href="#packages">Packages</a>
+  <a href="#trouble">When something is off</a>
+</nav>
+
+<section id="tldr" class="tldr">
+  <strong>Daily use</strong>
+<pre><code>dots            # am I in sync?  (uncommitted / unpushed / unpulled)
+dots sync       # commit everything, pull --rebase, push, restow if needed
+upd             # what is outdated? (brew, npm -g, apt, dnf, pacman)
+upd upgrade     # per manager: show list, ask y/N, upgrade</code></pre>
+  <p>Every new terminal or ssh login prints at most two lines when action is needed:</p>
+<pre><code>dotfiles: 2 uncommitted, 1 unpulled  ->  dots sync
+updates: brew 3 (git, tmux, node), npm 1 (ccstatusline)  ->  upd</code></pre>
+  <p>Nothing here ever changes anything without you typing the command or answering <kbd>y</kbd>.</p>
+</section>
+
+<h2 id="how">How it fits together</h2>
+<p>Each top-level directory is a Stow <em>package</em> that mirrors <code>$HOME</code>. <code>./bootstrap.sh</code> symlinks the
+packages into <code>$HOME</code>, so editing <code>~/.zshrc</code> edits the repo. Stow only folds directories it fully owns;
+the shared ones (<code>~/.config</code>, <code>~/.local/{bin,share,state}</code>) are created as real directories first,
+so installers never write into the repo.</p>
+
+<h3>Shell load order</h3>
+<div class="flow">zsh  : ~/.zshrc  ->  ~/.profile  ->  ~/.local/profile.d/*.sh  ->  ~/.zshrc.local
+bash : ~/.profile (login)  ->  ~/.local/profile.d/*.sh  ->  ~/.bashrc  ->  ~/.bashrc.local
+sh   : ~/.profile  ->  ~/.local/profile.d/*.sh  ->  ~/.profile.local</div>
+<p>Everything cross-shell lives in <code>profile.d</code> and must stay POSIX. Only completion and prompt code go in
+<code>.zshrc</code> / <code>.bashrc</code>.</p>
+
+<table>
+  <tr><th>profile.d file</th><th>Does</th></tr>
+  <tr><td>00-path.sh</td><td>PATH with <code>path_prepend</code> / <code>path_append</code> (idempotent, skip missing dirs). User dirs win over Homebrew. Installer PATH lines go here, never in an rc file.</td></tr>
+  <tr><td>10-env.sh</td><td><code>EDITOR</code> = <code>emacs-cli</code> when Emacs is installed, else vim, else vi. PAGER, Python, MPS fallback.</td></tr>
+  <tr><td>20-functions.sh</td><td><code>ta</code>, <code>mkcd</code> (see shell package).</td></tr>
+  <tr><td>30-alias.sh</td><td><code>emacs</code>/<code>emacs-gui</code> via emacsclient (only if installed), <code>ll la l</code>, zsh-only <code>noglob ytgrab</code>.</td></tr>
+  <tr><td>50-emacs-daemon.sh</td><td>Starts the Emacs daemon in the background if installed and not running.</td></tr>
+  <tr><td>60-dots-nudge.sh</td><td>The <code>dotfiles:</code> login line.</td></tr>
+  <tr><td>70-upd-nudge.sh</td><td>The <code>updates:</code> login line.</td></tr>
+</table>
+
+<h3>Machine-local, never committed</h3>
+<p><code>~/.profile.local</code>, <code>~/.bashrc.local</code>, <code>~/.zshrc.local</code> are sourced last if they exist.
+State lives outside the repo: <code>~/.local/state/emacs</code>, <code>~/.local/state/dots</code>, <code>~/.local/state/upd</code>.</p>
+
+<h2 id="dots">dots: keep the clones in sync</h2>
+<p>Script: <code>shell/.local/bin/dots</code>. Finds the repo through the <code>~/.profile</code> symlink, so the clone can live anywhere (<code>DOTFILES=</code> overrides).</p>
+<table>
+  <tr><th>Command</th><th>Does</th></tr>
+  <tr><td><code>dots</code></td><td>Status: branch, uncommitted files, commits unpushed / unpulled, incoming commit list. No network.</td></tr>
+  <tr><td><code>dots sync [msg]</code></td><td><code>git add -A</code> + commit (message defaults to hostname and date), <code>pull --rebase --autostash</code>, push. If new commits came in, reruns <code>bootstrap.sh</code> so new files get linked.</td></tr>
+  <tr><td><code>dots fetch</code></td><td>Fetch, then status.</td></tr>
+  <tr><td><code>dots stow [pkg..]</code></td><td>Run <code>bootstrap.sh</code> (restow).</td></tr>
+  <tr><td><code>dots git &lt;args&gt;</code></td><td>Any git command inside the repo, from anywhere.</td></tr>
+  <tr><td><code>dots dir</code></td><td>Repo path: <code>cd "$(dots dir)"</code>.</td></tr>
+</table>
+<p>The login nudge fetches from origin in the background at most once a day, with ssh BatchMode so it never prompts or hangs.
+If a rebase conflicts: fix the file, <code>dots git rebase --continue</code>, <code>dots sync</code>.</p>
+
+<h2 id="upd">upd: what is outdated</h2>
+<p>Script: <code>shell/.local/bin/upd</code>. Detects brew, npm globals (excluding npm itself, which follows node), apt, dnf, pacman.
+Results are cached in <code>~/.local/state/upd</code>.</p>
+<table>
+  <tr><th>Command</th><th>Does</th></tr>
+  <tr><td><code>upd</code></td><td>Cached results per manager and the age of the cache.</td></tr>
+  <tr><td><code>upd check</code></td><td>Refresh now: <code>brew update</code> + outdated, <code>npm outdated -g</code>, apt simulation, and so on.</td></tr>
+  <tr><td><code>upd upgrade [mgr]</code></td><td>Per manager: show the list, ask <kbd>y</kbd>/<kbd>N</kbd>, upgrade. Linux managers use sudo at that point only.</td></tr>
+</table>
+<p>The login nudge starts a detached refresh when the cache is older than a day; the first login after that shows nothing yet,
+the next one is accurate. On Debian/Ubuntu the apt result is as fresh as the system's own daily <code>apt update</code> timer.</p>
+
+<h2 id="machines">New or existing machine</h2>
+<pre><code># new machine
+git clone git@github.com:lambda-m/dotfiles.git ~/dotfiles
+cd ~/dotfiles && ./bootstrap.sh          # then open a new shell
+
+# machine that already has the repo but not dots yet
+cd ~/dotfiles && git pull && ./bootstrap.sh
+
+# from then on, everywhere
+dots sync</code></pre>
+<p><code>bootstrap.sh</code> creates the shared dirs, repairs a folded <code>~/.local</code>, removes an empty <code>~/.emacs.d</code>, sets
+<code>pull.rebase</code> and <code>push.autoSetupRemote</code>, and stows <code>core shell bash zsh tmux emacs</code> plus <code>ghostty ccstatusline</code> on macOS.
+Pass package names to stow only those. If <code>git pull</code> refuses because of local edits, <code>git stash</code> first and <code>git stash drop</code> afterwards
+(the usual culprit is a tool rewriting its own config file).</p>
+
+<h2 id="packages">Packages: what is special in each</h2>
+<div class="grid">
+
+  <div class="card"><h4>core</h4>
+    <p><code>~/.profile</code>: the shared entry point that sources <code>profile.d</code> and, in bash, <code>.bashrc</code>. Rarely touched.</p></div>
+
+  <div class="card"><h4>shell</h4>
+    <p><code>~/.local/profile.d</code> (table above) and <code>~/.local/bin</code>:</p>
+    <ul>
+      <li><code>dots</code>, <code>upd</code>: this manual.</li>
+      <li><code>ta [name]</code>: tmux attach-or-create, default session <code>main</code>; switches client when already inside tmux. Tab-completes session names.</li>
+      <li><code>mkcd dir</code>: mkdir and cd.</li>
+      <li><code>ytgrab</code>: YouTube downloader with playlist symlinks (bash, needs yt-dlp).</li>
+      <li><code>sshconfig-open host</code> + <code>SSHConfigOpener.app</code>: open an ssh host in a new Ghostty window (macOS).</li>
+    </ul></div>
+
+  <div class="card"><h4>bash, zsh</h4>
+    <p>Thin: bash has <code>ta</code> completion; zsh has the virtualenv-aware prompt, <code>compinit</code> with <code>~/.zsh/completion</code>
+    (custom <code>_make</code>), and <code>ta</code> completion. Both end by sourcing their <code>.local</code> file.</p></div>
+
+  <div class="card"><h4>tmux</h4>
+    <p><code>~/.config/tmux/tmux.conf</code> plus a <code>~/.tmux.conf</code> shim for old tmux. Nord theme, mouse on, 1-based indexes,
+    splits on <kbd>prefix</kbd> <kbd>|</kbd> and <kbd>prefix</kbd> <kbd>-</kbd>. <code>extended-keys on</code> so
+    <kbd>Shift</kbd>+<kbd>Enter</kbd> reaches Claude Code. Reload: <code>tmux source-file ~/.config/tmux/tmux.conf</code>.
+    <a href="https://github.com/tmux/tmux/wiki">tmux wiki</a></p></div>
+
+  <div class="card"><h4>emacs</h4>
+    <p>Config in <code>~/.config/emacs</code>, all state in <code>~/.local/state/emacs</code> (elpa, custom.el, caches). Runs as a daemon;
+    <code>emacs</code> and <code>emacs-cli</code> are terminal clients, <code>emacs-gui</code> opens a frame. Packages via use-package from MELPA
+    (nord-theme, neotree, no-littering, xclip, auto-package-update: asks weekly in the first frame).</p>
+    <ul>
+      <li><kbd>F8</kbd> neotree, <kbd>M</kbd>+arrows move between windows, <kbd>Esc</kbd> quit.</li>
+      <li><kbd>C-c y</kbd> YAML to JSON, <kbd>C-c j</kbd> JSON to YAML (needs <code>yq</code>).</li>
+    </ul>
+    <p>Restart the daemon after config changes: <code>emacsclient -e '(kill-emacs)'</code>, then open <code>emacs</code>.</p></div>
+
+  <div class="card"><h4>ghostty (macOS)</h4>
+    <p>Nord, IosevkaTerm Nerd Font 16, left Option as Alt, huge scrollback. <kbd>Cmd</kbd>+<kbd>`</kbd> toggles the quick terminal
+    from anywhere. <a href="https://ghostty.org/docs/config/reference">config reference</a></p></div>
+
+  <div class="card"><h4>ccstatusline (macOS)</h4>
+    <p>Claude Code status line: model, session and weekly usage, context %, git branch and changes, Nord colours. Installed as a
+    global npm package, so <code>upd upgrade npm</code> updates it. It rewrites its own <code>settings.json</code> on version bumps;
+    just <code>dots sync</code> when that shows up. Interactive editor: run <code>ccstatusline</code> in a terminal.
+    <a href="https://github.com/sirmalloc/ccstatusline">github.com/sirmalloc/ccstatusline</a></p></div>
+
+  <div class="card"><h4>sublime</h4>
+    <p>User settings only: Package Control list, Markdown + MarkdownPreview, LSP-yaml, Terminus colour scheme. Stow it only on
+    machines with Sublime Text (<code>./bootstrap.sh sublime</code>).</p></div>
+
+  <div class="card"><h4>not stowed</h4>
+    <p><code>wallpapers/</code> (old computer photos), <code>README.md</code>, this manual,
+    <code>.stowrc</code> (target <code>$HOME</code>, ignore <code>.DS_Store</code>).</p></div>
+</div>
+
+<h2 id="trouble">When something is off</h2>
+<table>
+  <tr><th>Symptom</th><th>Cause and fix</th></tr>
+  <tr><td>Hundreds of MB untracked under <code>shell/.local/share</code></td>
+      <td><code>~/.local</code> got folded into a symlink by a bare <code>stow shell</code>. Run <code>./bootstrap.sh</code>; it moves the foreign files to the real <code>~/.local</code> and restows.</td></tr>
+  <tr><td>Emacs ignores the config</td>
+      <td>A <code>~/.emacs.d</code> or <code>~/.emacs</code> exists and shadows <code>~/.config/emacs</code>. bootstrap removes an empty one; otherwise move it away and restart the daemon.</td></tr>
+  <tr><td>Shift+Enter submits in Claude Code</td>
+      <td>You are in a tmux started before the extended-keys setting. Detach and <code>ta</code> again.</td></tr>
+  <tr><td>Installer appended lines to <code>~/.zshrc</code></td>
+      <td>That edited the repo. Move the PATH line into <code>00-path.sh</code> with <code>path_append</code>, delete it from the rc file, <code>dots sync</code>.</td></tr>
+  <tr><td><code>dots sync</code> says pull failed</td>
+      <td>Rebase conflict. <code>dots git status</code>, fix, <code>dots git rebase --continue</code>, <code>dots sync</code>. For ccstatusline's settings.json just take either side.</td></tr>
+  <tr><td><code>dot: can't open sync</code></td>
+      <td>That is Graphviz. The helper is called <code>dots</code>.</td></tr>
+  <tr><td>Login shows no <code>updates:</code> line although things are outdated</td>
+      <td>Cache older than a day, refresh running in the background. Next shell, or <code>upd check</code>.</td></tr>
+</table>
+
+<p style="color: var(--muted); font-size: 13px; margin-top: 30px;">
+  <a href="https://www.gnu.org/software/stow/manual/">GNU Stow manual</a> ·
+  Source of truth is the repo; this page is a map, not the territory.
+</p>
+
+</div>
+</body>
+</html>
