@@ -1,0 +1,128 @@
+#!/bin/sh
+# dot - keep the dotfiles clone in sync with as little thinking as possible.
+#
+#   dot               same as: dot status
+#   dot status        branch, local changes, commits ahead/behind (no network)
+#   dot sync [msg]    commit everything, pull --rebase, push, restow if anything came in
+#   dot fetch         fetch origin quietly, then show status
+#   dot nudge         one line on stderr if out of sync; background fetch at most once a day
+#   dot stow [pkg..]  run bootstrap.sh (restow)
+#   dot git <args>    run git inside the dotfiles repo
+#   dot dir           print the repo path (for: cd "$(dot dir)")
+#
+# Repo location: $DOTFILES if set, else derived from the ~/.profile symlink,
+# else ~/dotfiles.
+set -u
+
+usage() { sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; }
+
+dot_dir() {
+  if [ -n "${DOTFILES:-}" ]; then printf '%s\n' "$DOTFILES"; return; fi
+  if [ -L "$HOME/.profile" ]; then
+    t=$(readlink "$HOME/.profile")
+    case "$t" in /*) ;; *) t="$HOME/$t" ;; esac
+    # t is <repo>/core/.profile
+    if d=$(cd "$(dirname "$t")/.." 2>/dev/null && pwd -P); then
+      printf '%s\n' "$d"; return
+    fi
+  fi
+  printf '%s\n' "$HOME/dotfiles"
+}
+
+command -v git >/dev/null 2>&1 || { echo "dot: git is not installed" >&2; exit 1; }
+DOT=$(dot_dir)
+[ -d "$DOT/.git" ] || { echo "dot: no git repo at $DOT (set DOTFILES to the clone)" >&2; exit 1; }
+
+g() { git -C "$DOT" "$@"; }
+
+has_upstream() { g rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1; }
+
+# Sets: dirty ahead behind
+counts() {
+  dirty=$(g status --porcelain | wc -l | tr -d ' ')
+  if has_upstream; then
+    set -- $(g rev-list --left-right --count 'HEAD...@{u}')
+    ahead=$1 behind=$2
+  else
+    ahead=0 behind=0
+  fi
+}
+
+cmd_status() {
+  counts
+  branch=$(g rev-parse --abbrev-ref HEAD)
+  printf '%s  (%s)\n' "$DOT" "$branch"
+  printf '  uncommitted: %s   unpushed: %s   unpulled: %s\n' "$dirty" "$ahead" "$behind"
+  if [ "$dirty" -gt 0 ]; then g status --short | sed 's/^/    /'; fi
+  if [ "$behind" -gt 0 ]; then
+    echo "  incoming:"; g log --oneline 'HEAD..@{u}' | sed 's/^/    /'
+  fi
+  if [ "$dirty" -gt 0 ] || [ "$ahead" -gt 0 ] || [ "$behind" -gt 0 ]; then
+    echo "  -> dot sync"
+  else
+    echo "  in sync"
+  fi
+}
+
+cmd_nudge() {
+  state="${XDG_STATE_HOME:-$HOME/.local/state}/dot"
+  stamp="$state/last-fetch"
+  mkdir -p "$state" 2>/dev/null || true
+  # Fetch at most once per day, in the background, never prompting (BatchMode).
+  if [ ! -f "$stamp" ] || [ -n "$(find "$stamp" -mmin +1440 2>/dev/null)" ]; then
+    touch "$stamp" 2>/dev/null || true
+    ( GIT_SSH_COMMAND="ssh -oBatchMode=yes -oConnectTimeout=5" \
+        git -C "$DOT" fetch -q >/dev/null 2>&1 & )
+  fi
+  counts
+  msg=""
+  [ "$dirty"  -gt 0 ] && msg="$dirty uncommitted"
+  [ "$ahead"  -gt 0 ] && msg="${msg:+$msg, }$ahead unpushed"
+  [ "$behind" -gt 0 ] && msg="${msg:+$msg, }$behind unpulled"
+  [ -n "$msg" ] && printf 'dotfiles: %s  ->  dot sync\n' "$msg" >&2
+  return 0
+}
+
+cmd_sync() {
+  counts
+  if [ "$dirty" -gt 0 ]; then
+    echo "committing:"
+    g status --short | sed 's/^/  /'
+    g add -A
+    msg="${1:-sync from $(uname -n | cut -d. -f1) $(date '+%Y-%m-%d %H:%M')}"
+    g commit -q -m "$msg" || return 1
+  fi
+  if has_upstream; then
+    before=$(g rev-parse '@{u}')
+    if ! g pull -q --rebase --autostash; then
+      echo "dot: pull --rebase failed. Resolve in $DOT, then run: dot git rebase --continue; dot sync" >&2
+      return 1
+    fi
+    after=$(g rev-parse '@{u}')
+  else
+    before=none after=none
+  fi
+  counts
+  if [ "$ahead" -gt 0 ]; then
+    g push -q || return 1
+    echo "pushed $ahead commit(s)"
+  fi
+  if [ "$before" != "$after" ]; then
+    echo "pulled new commits; restowing"
+    g log --oneline "$before..$after" | sed 's/^/  /'
+    (cd "$DOT" && ./bootstrap.sh) || echo "dot: stow reported a problem (see above)" >&2
+  fi
+  echo "dotfiles in sync"
+}
+
+case "${1:-status}" in
+  status|st)      cmd_status ;;
+  sync|s)         shift; cmd_sync "$@" ;;
+  fetch)          g fetch -q && cmd_status ;;
+  nudge)          cmd_nudge ;;
+  stow)           shift; (cd "$DOT" && ./bootstrap.sh "$@") ;;
+  git)            shift; g "$@" ;;
+  dir)            printf '%s\n' "$DOT" ;;
+  -h|--help|help) usage ;;
+  *)              usage >&2; exit 2 ;;
+esac

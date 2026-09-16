@@ -7,15 +7,5 @@ shell/.local/share/
 shell/.local/state/
 shell/.local/bin/claude
 
-emacs/.emacs.d/elpa/
-emacs/.emacs.d/auto-save-list/
-emacs/.emacs.d/var/
-emacs/.emacs.d/etc/
-emacs/.emacs.d/.cache/
-emacs/.emacs.d/*~
-emacs/.emacs.d/.#*
-emacs/.emacs.d/#*#
-emacs/.emacs.d/.last-package-update-day
-
-# Emacs native compilation cache
-emacs/.emacs.d/eln-cache/
+# Emacs keeps all state (elpa, eln-cache, custom.el, ...) in ~/.local/state/emacs,
+# see emacs/.config/emacs/init.el. Nothing under emacs/ should ever be generated.

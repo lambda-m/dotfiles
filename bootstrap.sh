@@ -13,10 +13,23 @@ cd "$(dirname "$0")"
 
 mkdir -p "$HOME/.config" "$HOME/.local/bin" "$HOME/.local/share" "$HOME/.local/state"
 
+# Emacs only reads ~/.config/emacs when ~/.emacs.d and ~/.emacs do not exist.
+# An emacs started without config creates an empty ~/.emacs.d, which then
+# shadows the stowed config forever. Remove it if empty, warn otherwise.
+rmdir "$HOME/.emacs.d" 2>/dev/null || true
+for shadow in "$HOME/.emacs.d" "$HOME/.emacs" "$HOME/.emacs.el"; do
+  [ -e "$shadow" ] && echo "warning: $shadow exists and will shadow ~/.config/emacs" >&2
+done
+
+# Git behaviour that keeps several clones in sync without thinking:
+# pull rebases instead of merging, first push of a branch sets upstream.
+git config pull.rebase true
+git config push.autoSetupRemote true
+
 if [ $# -gt 0 ]; then
   pkgs="$*"
 else
-  pkgs="core shell bash zsh tmux"
+  pkgs="core shell bash zsh tmux emacs"
   case "$(uname -s)" in
     Darwin) pkgs="$pkgs ghostty ccstatusline" ;;
   esac
@@ -24,4 +37,5 @@ fi
 
 # -R restows: idempotent, and repairs links after files move within a package.
 # shellcheck disable=SC2086
-stow -R -v $pkgs
+stow -R $pkgs
+echo "stowed: $pkgs"

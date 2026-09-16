@@ -25,6 +25,10 @@ fpath=(~/.zsh/completion $fpath)
 autoload -Uz compinit
 compinit
 
+# Completion for ta (function lives in ~/.local/profile.d/20-functions.sh)
+_ta() { compadd -- ${(f)"$(tmux list-sessions -F '#{session_name}' 2>/dev/null)"} }
+compdef _ta ta
+
 
 # --------------------------------------------------
 # Optional local overrides (machine-specific)

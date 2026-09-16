@@ -44,3 +44,25 @@ Machine-specific stuff that must not be committed goes in `~/.profile.local`,
 are appending to a symlink into this repo: move their line into
 `shell/.local/profile.d/00-path.sh` (guarded by `path_prepend`/`path_append`) and
 drop it from the rc file.
+
+## Keeping machines in sync: `dot`
+
+`dot` (in `shell/.local/bin`) wraps the git dance so nothing has to be remembered:
+
+```
+dot            # status: uncommitted / unpushed / unpulled
+dot sync       # commit everything, pull --rebase, push, restow if new commits came in
+dot sync "msg" # same, with your own commit message
+dot fetch      # fetch and show status
+dot git <...>  # git inside the repo from anywhere
+cd "$(dot dir)"
+```
+
+Every interactive login prints one line on stderr when the clone is out of sync
+(`profile.d/60-dot-nudge.sh`). It fetches from origin in the background at most
+once a day, using ssh BatchMode so it never prompts. Workflow: change something,
+see the nudge next time a shell opens, type `dot sync`. On the other machine the
+nudge says "unpulled", type `dot sync`. Done.
+
+Shared shell functions (`ta`, `mkcd`) live in `shell/.local/profile.d/20-functions.sh`
+and must stay POSIX; only completion goes in `.bashrc` / `.zshrc`.

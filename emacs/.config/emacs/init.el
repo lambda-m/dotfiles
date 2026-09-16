@@ -1,3 +1,5 @@
+;;; init.el --- Emacs configuration -*- lexical-binding: t -*-
+
 ;;; --- START SMART HEADER ---
 
 ;; 1. Force all state/junk to a local directory (not symlinked via Stow)
@@ -27,8 +29,12 @@
                          ("elpa" . "https://elpa.gnu.org/packages/")))
 
 (package-initialize)
+;; First start on a new machine. Never let a missing network abort the rest of
+;; this file; use-package :ensure will simply warn per package instead.
 (unless package-archive-contents
-  (package-refresh-contents))
+  (condition-case err
+      (package-refresh-contents)
+    (error (message "package-refresh-contents failed: %s" (error-message-string err)))))
 
 ;; Initialize use-package
 (unless (package-installed-p 'use-package)
@@ -57,7 +63,11 @@
   (auto-package-update-prompt-before-update t)
   (auto-package-update-hide-results t)
   :config
-  (auto-package-update-maybe)
+  ;; The daemon is started from a shell hook with no frame and no stdin, so a
+  ;; y/n prompt there errors out. Ask in the first client frame instead.
+  (if (daemonp)
+      (add-hook 'server-after-make-frame-hook #'auto-package-update-maybe)
+    (auto-package-update-maybe))
   (auto-package-update-at-time "09:00"))
 
 ;; Nord theme
