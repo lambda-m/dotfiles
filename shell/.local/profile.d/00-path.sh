@@ -11,11 +11,6 @@ path_append() {
 
 OS="$(uname -s)"
 
-# --- common paths ---
-path_prepend "$HOME/.local/bin"
-path_prepend "$HOME/bin"
-path_prepend "$HOME/go/bin"
-
 # --- macOS specific ---
 if [ "$OS" = "Darwin" ]; then
   path_prepend "/opt/homebrew/bin"
@@ -30,5 +25,11 @@ fi
 if [ "$OS" = "Linux" ]; then
   path_prepend "/usr/local/bin"
 fi
+
+# --- user paths last, so they end up FIRST and shadow Homebrew/system tools ---
+# (a user-level script must beat e.g. Graphviz's /opt/homebrew/bin/dot)
+path_prepend "$HOME/go/bin"
+path_prepend "$HOME/bin"
+path_prepend "$HOME/.local/bin"
 
 export PATH

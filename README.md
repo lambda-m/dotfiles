@@ -47,7 +47,7 @@ drop it from the rc file.
 
 ## Updating an existing machine
 
-First time after these changes (no `dot` there yet):
+First time after these changes (no `dots` there yet):
 
 ```
 cd ~/dotfiles && git pull && ./bootstrap.sh
@@ -55,29 +55,29 @@ cd ~/dotfiles && git pull && ./bootstrap.sh
 
 `bootstrap.sh` unfolds a symlinked `~/.local` by itself (moving installer files
 to the real `~/.local`), restows, and sets the git options. Open a new shell:
-`dot` is on PATH from then on and the nudge is active. Afterwards it is only
-ever `dot sync`. If `git pull` refuses because of local edits, `git stash`
+`dots` is on PATH from then on and the nudge is active. Afterwards it is only
+ever `dots sync`. If `git pull` refuses because of local edits, `git stash`
 first, or commit them with `git add -A && git commit -m wip` and let
-`dot sync` sort out the rest.
+`dots sync` sort out the rest.
 
-## Keeping machines in sync: `dot`
+## Keeping machines in sync: `dots`
 
-`dot` (in `shell/.local/bin`) wraps the git dance so nothing has to be remembered:
+`dots` (in `shell/.local/bin`) wraps the git dance so nothing has to be remembered:
 
 ```
-dot            # status: uncommitted / unpushed / unpulled
-dot sync       # commit everything, pull --rebase, push, restow if new commits came in
-dot sync "msg" # same, with your own commit message
-dot fetch      # fetch and show status
-dot git <...>  # git inside the repo from anywhere
-cd "$(dot dir)"
+dots            # status: uncommitted / unpushed / unpulled
+dots sync       # commit everything, pull --rebase, push, restow if new commits came in
+dots sync "msg" # same, with your own commit message
+dots fetch      # fetch and show status
+dots git <...>  # git inside the repo from anywhere
+cd "$(dots dir)"
 ```
 
 Every interactive login prints one line on stderr when the clone is out of sync
-(`profile.d/60-dot-nudge.sh`). It fetches from origin in the background at most
+(`profile.d/60-dots-nudge.sh`). It fetches from origin in the background at most
 once a day, using ssh BatchMode so it never prompts. Workflow: change something,
-see the nudge next time a shell opens, type `dot sync`. On the other machine the
-nudge says "unpulled", type `dot sync`. Done.
+see the nudge next time a shell opens, type `dots sync`. On the other machine the
+nudge says "unpulled", type `dots sync`. Done.
 
 Shared shell functions (`ta`, `mkcd`) live in `shell/.local/profile.d/20-functions.sh`
 and must stay POSIX; only completion goes in `.bashrc` / `.zshrc`.

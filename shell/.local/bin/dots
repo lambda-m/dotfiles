@@ -1,14 +1,14 @@
 #!/bin/sh
-# dot - keep the dotfiles clone in sync with as little thinking as possible.
+# dots - keep the dotfiles clone in sync with as little thinking as possible.
 #
-#   dot               same as: dot status
-#   dot status        branch, local changes, commits ahead/behind (no network)
-#   dot sync [msg]    commit everything, pull --rebase, push, restow if anything came in
-#   dot fetch         fetch origin quietly, then show status
-#   dot nudge         one line on stderr if out of sync; background fetch at most once a day
-#   dot stow [pkg..]  run bootstrap.sh (restow)
-#   dot git <args>    run git inside the dotfiles repo
-#   dot dir           print the repo path (for: cd "$(dot dir)")
+#   dots               same as: dots status
+#   dots status        branch, local changes, commits ahead/behind (no network)
+#   dots sync [msg]    commit everything, pull --rebase, push, restow if anything came in
+#   dots fetch         fetch origin quietly, then show status
+#   dots nudge         one line on stderr if out of sync; background fetch at most once a day
+#   dots stow [pkg..]  run bootstrap.sh (restow)
+#   dots git <args>    run git inside the dotfiles repo
+#   dots dir           print the repo path (for: cd "$(dots dir)")
 #
 # Repo location: $DOTFILES if set, else derived from the ~/.profile symlink,
 # else ~/dotfiles.
@@ -29,9 +29,9 @@ dot_dir() {
   printf '%s\n' "$HOME/dotfiles"
 }
 
-command -v git >/dev/null 2>&1 || { echo "dot: git is not installed" >&2; exit 1; }
+command -v git >/dev/null 2>&1 || { echo "dots: git is not installed" >&2; exit 1; }
 DOT=$(dot_dir)
-[ -d "$DOT/.git" ] || { echo "dot: no git repo at $DOT (set DOTFILES to the clone)" >&2; exit 1; }
+[ -d "$DOT/.git" ] || { echo "dots: no git repo at $DOT (set DOTFILES to the clone)" >&2; exit 1; }
 
 g() { git -C "$DOT" "$@"; }
 
@@ -58,14 +58,14 @@ cmd_status() {
     echo "  incoming:"; g log --oneline 'HEAD..@{u}' | sed 's/^/    /'
   fi
   if [ "$dirty" -gt 0 ] || [ "$ahead" -gt 0 ] || [ "$behind" -gt 0 ]; then
-    echo "  -> dot sync"
+    echo "  -> dots sync"
   else
     echo "  in sync"
   fi
 }
 
 cmd_nudge() {
-  state="${XDG_STATE_HOME:-$HOME/.local/state}/dot"
+  state="${XDG_STATE_HOME:-$HOME/.local/state}/dots"
   stamp="$state/last-fetch"
   mkdir -p "$state" 2>/dev/null || true
   # Fetch at most once per day, in the background, never prompting (BatchMode).
@@ -79,7 +79,7 @@ cmd_nudge() {
   [ "$dirty"  -gt 0 ] && msg="$dirty uncommitted"
   [ "$ahead"  -gt 0 ] && msg="${msg:+$msg, }$ahead unpushed"
   [ "$behind" -gt 0 ] && msg="${msg:+$msg, }$behind unpulled"
-  [ -n "$msg" ] && printf 'dotfiles: %s  ->  dot sync\n' "$msg" >&2
+  [ -n "$msg" ] && printf 'dotfiles: %s  ->  dots sync\n' "$msg" >&2
   return 0
 }
 
@@ -95,7 +95,7 @@ cmd_sync() {
   if has_upstream; then
     before=$(g rev-parse '@{u}')
     if ! g pull -q --rebase --autostash; then
-      echo "dot: pull --rebase failed. Resolve in $DOT, then run: dot git rebase --continue; dot sync" >&2
+      echo "dots: pull --rebase failed. Resolve in $DOT, then run: dots git rebase --continue; dots sync" >&2
       return 1
     fi
     after=$(g rev-parse '@{u}')
@@ -110,7 +110,7 @@ cmd_sync() {
   if [ "$before" != "$after" ]; then
     echo "pulled new commits; restowing"
     g log --oneline "$before..$after" | sed 's/^/  /'
-    (cd "$DOT" && ./bootstrap.sh) || echo "dot: stow reported a problem (see above)" >&2
+    (cd "$DOT" && ./bootstrap.sh) || echo "dots: stow reported a problem (see above)" >&2
   fi
   echo "dotfiles in sync"
 }
