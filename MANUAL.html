@@ -254,6 +254,9 @@ Pass package names to stow only those. If <code>git pull</code> refuses because 
       <td>You are in a tmux started before the extended-keys setting. Detach and <code>ta</code> again.</td></tr>
   <tr><td>Installer appended lines to <code>~/.zshrc</code></td>
       <td>That edited the repo. Move the PATH line into <code>00-path.sh</code> with <code>path_append</code>, delete it from the rc file, <code>dots sync</code>.</td></tr>
+  <tr><td>Everything works in zsh but nothing works in bash — no <code>ta</code>, no <code>$EDITOR</code>, missing PATH entries</td>
+      <td>A <code>~/.bash_profile</code> exists and shadows <code>~/.profile</code>: bash login shells read the first of <code>.bash_profile</code>, <code>.bash_login</code>, <code>.profile</code> and stop, so <code>profile.d</code> never loads. Installers create it. Move its lines into <code>00-path.sh</code> and delete it.
+      Check with <code>env -i HOME="$HOME" bash -lc 'echo $EDITOR; type -t ta'</code>.</td></tr>
   <tr><td><code>dots sync</code> says pull failed</td>
       <td>Rebase conflict. <code>dots git status</code>, fix, <code>dots git rebase --continue</code>, <code>dots sync</code>. For ccstatusline's settings.json just take either side.</td></tr>
   <tr><td><code>dot: can't open sync</code></td>

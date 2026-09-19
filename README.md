@@ -48,6 +48,17 @@ are appending to a symlink into this repo: move their line into
 `shell/.local/profile.d/00-path.sh` (guarded by `path_prepend`/`path_append`) and
 drop it from the rc file.
 
+**`~/.bash_profile` must not exist.** A bash login shell reads the *first* of
+`~/.bash_profile`, `~/.bash_login`, `~/.profile` and stops. Installers
+(Rancher Desktop, LM Studio, rustup) like to create `~/.bash_profile`, which
+silently shadows `~/.profile` and disables this entire repo under bash — no
+`profile.d`, no `ta`, no PATH entries — while zsh keeps working, so it is easy to
+miss. Move the lines into `00-path.sh` and delete the file. Check with:
+
+```sh
+env -i HOME="$HOME" bash -lc 'echo $EDITOR; type -t ta'
+```
+
 ## Updating an existing machine
 
 First time after these changes (no `dots` there yet):
