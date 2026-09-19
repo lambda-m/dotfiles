@@ -102,3 +102,69 @@ Every interactive login prints one line on stderr when something is outdated
 The expensive part (`brew update`, registry lookups) runs detached in the
 background at most once a day, so login stays instant. Nothing is upgraded
 unless you answer `y` in `upd upgrade`. Results live in `~/.local/state/upd`.
+
+## What should be installed: `brew/`
+
+`upd` answers "is anything outdated". `brew/` answers "what belongs on this
+machine at all". Layered Brewfiles, one per Mac, applied by hand. Nothing here
+runs automatically: no stow package, no login hook, `bootstrap.sh` ignores it.
+
+```
+brew/Brewfile.common       # all three Macs: every formula, the universal casks
+brew/Brewfile.maxbookpro   # + everything else (this one is the superset)
+brew/Brewfile.mini         # + office extras
+brew/Brewfile.air          # + daily-driver extras
+brew/MANUAL.md             # the handful Homebrew cannot install
+```
+
+The per-machine files `instance_eval` the common one (Brewfiles are Ruby), so
+you always pass a machine file and never `Brewfile.common` — passing the common
+file alone would make `cleanup` offer to uninstall every machine-specific
+package.
+
+```
+brew bundle install --file=brew/Brewfile.air --no-upgrade # install what is missing
+brew bundle check   --file=brew/Brewfile.air --no-upgrade # what is missing here
+brew bundle cleanup --file=brew/Brewfile.air              # DRY RUN: what is unlisted
+brew bundle cleanup --file=brew/Brewfile.air --force      # actually uninstall
+```
+
+**Always pass `--no-upgrade`.** Without it, `brew bundle` treats *outdated* as
+unsatisfied: `check` reports installed-but-old packages as missing, and `install`
+quietly turns into a mass `brew upgrade` of everything on the machine. Upgrading
+is `upd`'s job; these files only answer "is it installed".
+
+Set both in `~/.profile.local`, once per machine, and stop thinking about it:
+
+```sh
+export HOMEBREW_BUNDLE_FILE="$HOME/dotfiles/brew/Brewfile.maxbookpro"
+export HOMEBREW_BUNDLE_NO_UPGRADE=1
+```
+
+Then `brew bundle check` / `install` / `cleanup` need no flags at all.
+
+Day to day, install and record in one step, then sync:
+
+```
+brew bundle add --cask obsidian --install   # install AND write it down
+brew bundle remove --cask obsidian          # drop the line
+dots sync
+```
+
+**Never run `brew bundle dump` at any of these paths.** It rewrites the whole
+file and would destroy the `instance_eval` lines. `brew bundle add` appends and
+leaves them intact; dump only ever goes to a scratch path.
+
+Setting up a machine, or checking an old one:
+
+```
+cd ~/dotfiles && dots sync
+brew bundle cleanup --file=brew/Brewfile.mini              # 1. what is here, unlisted?
+brew bundle check   --file=brew/Brewfile.mini --no-upgrade # 2. what is listed, missing?
+#    promote keepers with `brew bundle add ... --file=brew/Brewfile.{mini,common}`
+brew bundle install --file=brew/Brewfile.mini              # 3. fill the gaps
+```
+
+Survey before installing, or you install forty things before seeing what is
+already there. Step 1 is always non-destructive, so it doubles as the drift
+check months later.

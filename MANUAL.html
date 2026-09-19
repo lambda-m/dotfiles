@@ -210,8 +210,34 @@ Pass package names to stow only those. If <code>git pull</code> refuses because 
     <p>User settings only: Package Control list, Markdown + MarkdownPreview, LSP-yaml, Terminus colour scheme. Stow it only on
     machines with Sublime Text (<code>./bootstrap.sh sublime</code>).</p></div>
 
+  <div class="card"><h4>brew <span style="font-weight:normal">(not stowed)</span></h4>
+    <p>What should be <em>installed</em>, as opposed to <code>upd</code>, which asks what is <em>outdated</em>.
+    Layered Brewfiles, run by hand. No stow package, no login hook, <code>bootstrap.sh</code> ignores it.</p>
+    <ul>
+      <li><code>Brewfile.common</code> — all three Macs: every formula, the universal casks, VS Code extensions.</li>
+      <li><code>Brewfile.maxbookpro</code> / <code>.mini</code> / <code>.air</code> — each <code>instance_eval</code>s common, then adds its own.</li>
+      <li><code>MANUAL.md</code> — the handful Homebrew cannot install.</li>
+    </ul>
+    <p>Always pass a <em>machine</em> file, never <code>Brewfile.common</code>: passing common alone would make
+    <code>cleanup</code> offer to uninstall every machine-specific package.</p>
+    <ul>
+      <li><code>brew bundle install --file=… --no-upgrade</code> — installs what is missing. Never removes.</li>
+      <li><code>brew bundle check --file=… --no-upgrade</code> — what is missing.</li>
+      <li><code>brew bundle cleanup --file=…</code> — <strong>dry run</strong>: what is installed but unlisted.
+      Only <code>--force</code> actually uninstalls.</li>
+      <li><code>brew bundle add --cask X --install</code> — install and write it down in one step.</li>
+    </ul>
+    <p><strong>Never <code>brew bundle dump</code> at these paths</strong> — it rewrites the whole file and would destroy the
+    <code>instance_eval</code> lines. <code>add</code> appends and leaves them intact.</p>
+    <p><strong>Always pass <code>--no-upgrade</code>.</strong> Without it <code>brew bundle</code> counts <em>outdated</em> as
+    unsatisfied: <code>check</code> reports installed-but-old packages as missing, and <code>install</code> turns into a mass
+    <code>brew upgrade</code> of the whole machine. Upgrading is <code>upd</code>'s job.</p>
+    <p>Put both in <code>~/.profile.local</code> and the flags become unnecessary:<br>
+    <code>export HOMEBREW_BUNDLE_FILE="$HOME/dotfiles/brew/Brewfile.maxbookpro"</code><br>
+    <code>export HOMEBREW_BUNDLE_NO_UPGRADE=1</code></p></div>
+
   <div class="card"><h4>not stowed</h4>
-    <p><code>wallpapers/</code> (old computer photos), <code>README.md</code>, this manual,
+    <p><code>brew/</code> (above), <code>wallpapers/</code> (old computer photos), <code>README.md</code>, this manual,
     <code>.stowrc</code> (target <code>$HOME</code>, ignore <code>.DS_Store</code>).</p></div>
 </div>
 
@@ -230,6 +256,20 @@ Pass package names to stow only those. If <code>git pull</code> refuses because 
       <td>Rebase conflict. <code>dots git status</code>, fix, <code>dots git rebase --continue</code>, <code>dots sync</code>. For ccstatusline's settings.json just take either side.</td></tr>
   <tr><td><code>dot: can't open sync</code></td>
       <td>That is Graphviz. The helper is called <code>dots</code>.</td></tr>
+  <tr><td><code>brew bundle cleanup</code> wants to remove half the machine</td>
+      <td>You passed <code>Brewfile.common</code> instead of a machine file. Common has no <code>instance_eval</code>, so cleanup never sees the machine-specific entries. Always pass <code>Brewfile.maxbookpro</code>/<code>.mini</code>/<code>.air</code>.</td></tr>
+  <tr><td><code>brew bundle check</code> lists things that <em>are</em> installed</td>
+      <td>They are outdated, and plain <code>check</code> treats outdated as unsatisfied. Add <code>--no-upgrade</code> to ask only "is it installed". Upgrading is <code>upd</code>'s job.</td></tr>
+  <tr><td><code>brew bundle install</code> started upgrading the whole machine</td>
+      <td>Same cause, worse effect: without <code>--no-upgrade</code> it upgrades every outdated package, not just the missing ones. Set <code>HOMEBREW_BUNDLE_NO_UPGRADE=1</code> in <code>~/.profile.local</code>.</td></tr>
+  <tr><td><code>brew bundle</code> fails en masse with an Xcode error</td>
+      <td>One source-built formula needed a compiler and aborted the batch; everything after it reports "failed" without being touched. Check <code>xcode-select -p</code> against the macOS version. Casks and bottles do not need Xcode — rerun with <code>--no-upgrade</code>.</td></tr>
+  <tr><td>A cask is registered under an old, renamed token</td>
+      <td>Both tokens claim the same app, so <code>brew uninstall --cask &lt;old&gt;</code> would delete it. Remove only brew's record: <code>rm -rf /opt/homebrew/Caskroom/&lt;old-token&gt;</code>.</td></tr>
+  <tr><td>A machine Brewfile lost its <code>instance_eval</code> lines</td>
+      <td>Something ran <code>brew bundle dump</code> at that path; dump rewrites the whole file. Restore from git and use <code>brew bundle add --file=…</code> instead, which appends.</td></tr>
+  <tr><td>A cask installs but <code>check</code> still reports it missing</td>
+      <td>Its app was installed by hand at a different version, so <code>--adopt</code> refused. Replace it with <code>brew install --cask --force &lt;name&gt;</code>, which upgrades to the cask's version.</td></tr>
   <tr><td>Login shows no <code>updates:</code> line although things are outdated</td>
       <td>Cache older than a day, refresh running in the background. Next shell, or <code>upd check</code>.</td></tr>
 </table>

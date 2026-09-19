@@ -1,0 +1,237 @@
+# Brewfile.common - everything that belongs on all three Macs.
+#
+# Never passed to brew bundle directly: the per-machine files below include it,
+# so that `brew bundle check` and `cleanup` see the full union. Passing this file
+# alone would make cleanup offer to uninstall every machine-specific package.
+#
+#   brew bundle install --file=brew/Brewfile.maxbookpro
+#
+# Add entries with `brew bundle add --cask X --file=brew/Brewfile.common`;
+# it appends and leaves the Ruby in the machine files intact.
+# Never run `brew bundle dump` at any of these paths - it rewrites the whole
+# file and would destroy the instance_eval lines.
+
+tap "airbytehq/tap"
+tap "anomalyco/tap"
+
+# AI pair programming in your terminal
+brew "aider"
+# Display directories as trees (with optional color/HTML output)
+brew "tree"
+# Automate deployment, configuration, and upgrading
+brew "ansible"
+# Record and share terminal sessions
+brew "asciinema"
+# Perf monitoring CLI tool for Apple Silicon
+brew "asitop"
+# Code searching, linting, rewriting
+brew "ast-grep"
+# Play, record, convert, and stream select audio and video codecs
+brew "ffmpeg"
+# Free lossless audio codec
+brew "flac"
+# Lightweight and versatile audio player
+brew "audacious"
+# Resource monitor. C++ version and continuation of bashtop and bpytop
+brew "btop"
+# Powerful, enterprise-ready, open source web server with automatic HTTPS
+brew "caddy"
+# Cross-platform make
+brew "cmake"
+# Embeddable SQL OLAP Database Management System
+brew "duckdb"
+# Like neofetch, but much faster because written mostly in C
+brew "fastfetch"
+# User-friendly command-line shell for UNIX-like operating systems
+brew "fish"
+# Command-line fuzzy finder written in Go
+brew "fzf"
+# Framework for layout and rendering of i18n text
+brew "pango"
+# Distributed revision control system
+brew "git"
+# Git extension for versioning large files
+brew "git-lfs"
+# Open source programming language to build simple/reliable/efficient software
+brew "go"
+# Kubernetes package manager
+brew "helm"
+# Configurable static site generator
+brew "hugo"
+# Command-line benchmarking tool
+brew "hyperfine"
+# Tools and libraries to manipulate images in select formats
+brew "imagemagick"
+# CLI client for interacting with Incus
+brew "incus"
+# Lightweight and flexible command-line JSON processor
+brew "jq"
+# Kubernetes CLI To Manage Your Clusters In Style!
+brew "k9s"
+# Lazier way to manage everything docker
+brew "lazydocker"
+# Portable Foreign Function Interface library
+brew "libffi"
+# Postgres C API library
+brew "libpq"
+# Find what models run on your hardware
+brew "llmfit"
+# Apple Silicon Monitor Top written in Go Lang
+brew "mactop"
+# Run a Kubernetes cluster locally
+brew "minikube"
+# Remote terminal application
+brew "mosh"
+# Open-source, cross-platform JavaScript runtime environment
+brew "node"
+# Create, run, and share large language models (LLMs)
+brew "ollama", restart_service: :changed
+# 7-Zip (high compression file archiver) implementation
+brew "p7zip"
+# Execute binaries from Python packages in isolated environments
+brew "pipx"
+# Draw UML diagrams
+brew "plantuml"
+# Object-relational database system
+brew "postgresql@17", restart_service: :changed
+# Convert bitmaps to vector graphics
+brew "potrace"
+# Command-line shell and scripting language
+brew "powershell"
+# Generic machine emulator and virtualizer
+brew "qemu"
+# Display and control your Android device
+brew "scrcpy"
+# Strong open-source chess engine
+brew "stockfish"
+# Organize software neatly under a single directory tree (e.g. /usr/local)
+brew "stow"
+# ISO/Edinburgh-style Prolog interpreter
+brew "swi-prolog"
+# Open source continuous file synchronization application
+brew "syncthing", restart_service: :changed
+# User interface to the TELNET protocol
+brew "telnet"
+# Terminal multiplexer
+brew "tmux"
+# Extremely fast Python package installer and resolver, written in Rust
+brew "uv"
+# Internet file retriever
+brew "wget"
+# Port of OpenAI's Whisper model in C/C++
+brew "whisper.cpp"
+# Tools for the WireGuard secure network tunnel
+brew "wireguard-tools"
+# Generate your Xcode project from a spec file and your folder structure
+brew "xcodegen"
+# Command-line tool to install and switch between multiple versions of Xcode
+brew "xcodes"
+# Process YAML, JSON, XML, CSV and properties documents from the CLI
+brew "yq"
+# Feature-rich command-line audio/video downloader
+brew "yt-dlp"
+# Pluggable terminal workspace, with terminal multiplexer as the base feature
+brew "zellij"
+# Programming language designed for robustness, optimality, and clarity
+brew "zig"
+# The AI coding agent built for the terminal.
+brew "anomalyco/tap/opencode", trusted: true
+
+go "github.com/air-verse/air"
+go "github.com/go-delve/delve/cmd/dlv"
+go "golang.org/x/tools/gopls"
+go "honnef.co/go/tools/cmd/staticcheck"
+uv "meltano"
+npm "@modelcontextprotocol/server-postgres"
+npm "electron"
+
+vscode "avetis.nord-palette"
+vscode "bierner.markdown-preview-github-styles"
+vscode "continue.continue"
+vscode "github.copilot"
+vscode "github.copilot-chat"
+vscode "golang.go"
+vscode "google.geminicodeassist"
+vscode "humao.rest-client"
+vscode "ms-python.debugpy"
+vscode "ms-python.python"
+vscode "ms-python.vscode-pylance"
+vscode "ms-python.vscode-python-envs"
+vscode "ms-vscode-remote.remote-ssh"
+vscode "ms-vscode-remote.remote-ssh-edit"
+vscode "ms-vscode.makefile-tools"
+vscode "ms-vscode.remote-explorer"
+vscode "qwtel.sqlite-viewer"
+vscode "rebornix.prolog"
+vscode "saoudrizwan.claude-dev"
+
+# ---------- casks: all machines ----------
+# Android SDK component
+cask "android-platform-tools"
+# Application uninstaller
+cask "appcleaner"
+cask "bettertouchtool"
+# Web browser focusing on privacy
+cask "brave-browser"
+# OpenAI's coding agent that runs in your terminal
+cask "codex"
+# Write, edit, and chat about your code with AI
+cask "cursor"
+# Server and cloud storage browser
+cask "cyberduck"
+# Matrix collaboration client
+cask "element"
+# GNU Emacs text editor
+cask "emacs-app"
+# Cross-platform Text Expander written in Rust
+cask "espanso"
+# Web browser
+cask "firefox"
+cask "font-caskaydia-cove-nerd-font"
+cask "font-caskaydia-mono-nerd-font"
+cask "font-fira-mono-nerd-font"
+cask "font-iosevka-nerd-font"
+cask "font-jetbrains-mono"
+# Terminal emulator that uses platform-native UI and GPU acceleration
+cask "ghostty"
+# Web browser
+cask "google-chrome"
+# Utility to hide menu bar items
+cask "hiddenbar"
+# Terminal emulator as alternative to Apple's Terminal app
+cask "iterm2"
+# Keyboard customiser
+cask "karabiner-elements"
+# Password manager app
+cask "keepassxc"
+# Adaptive brightness for external displays
+cask "lunar"
+cask "rectangle"
+# Instant messaging application focusing on security
+cask "signal"
+# Media player based on MPlayer and mplayer2
+cask "stolendata-mpv"
+# Text editor for code, markup and prose
+cask "sublime-text"
+# Real time file synchronisation software
+cask "syncthing-app"
+# Mesh VPN based on WireGuard
+cask "tailscale-app"
+cask "telegram"
+# Unpacks archive files
+cask "the-unarchiver"
+cask "threema@beta"
+# Customizable email client
+cask "thunderbird"
+# Open-source BitTorrent client
+cask "transmission"
+# Open-source code editor
+cask "visual-studio-code"
+# Multimedia player
+cask "vlc"
+# GPU-accelerated cross-platform terminal emulator and multiplexer
+cask "wezterm"
+# Multiplayer code editor
+cask "zed"
+# Video communication and virtual meeting platform
+cask "zoom"
