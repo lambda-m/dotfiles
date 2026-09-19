@@ -117,6 +117,17 @@ brew/Brewfile.air          # + daily-driver extras
 brew/MANUAL.md             # the handful Homebrew cannot install
 ```
 
+The per-machine name is `uname -n`, lowercased — `MaxBookPro` gives
+`Brewfile.maxbookpro`. `10-env.sh` uses that to set `HOMEBREW_BUNDLE_FILE`
+automatically. On a machine whose hostname does not match a file, either rename
+the file or set a short hostname once:
+
+```sh
+sudo scutil --set ComputerName mini
+sudo scutil --set HostName mini
+sudo scutil --set LocalHostName mini
+```
+
 The per-machine files `instance_eval` the common one (Brewfiles are Ruby), so
 you always pass a machine file and never `Brewfile.common` — passing the common
 file alone would make `cleanup` offer to uninstall every machine-specific
@@ -134,14 +145,15 @@ unsatisfied: `check` reports installed-but-old packages as missing, and `install
 quietly turns into a mass `brew upgrade` of everything on the machine. Upgrading
 is `upd`'s job; these files only answer "is it installed".
 
-Set both in `~/.profile.local`, once per machine, and stop thinking about it:
+Both of these are set for you by `profile.d/10-env.sh` — `HOMEBREW_BUNDLE_NO_UPGRADE`
+always, and `HOMEBREW_BUNDLE_FILE` when a file matching this hostname exists. In
+a fresh shell, `brew bundle check` / `install` / `cleanup` need no flags at all:
 
-```sh
-export HOMEBREW_BUNDLE_FILE="$HOME/dotfiles/brew/Brewfile.maxbookpro"
-export HOMEBREW_BUNDLE_NO_UPGRADE=1
 ```
-
-Then `brew bundle check` / `install` / `cleanup` need no flags at all.
+brew bundle check      # this machine's manifest, presence only
+brew bundle install    # install what is missing, upgrade nothing
+brew bundle cleanup    # dry run: what is installed but unlisted
+```
 
 Day to day, install and record in one step, then sync:
 

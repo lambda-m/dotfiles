@@ -229,12 +229,14 @@ Pass package names to stow only those. If <code>git pull</code> refuses because 
     </ul>
     <p><strong>Never <code>brew bundle dump</code> at these paths</strong> — it rewrites the whole file and would destroy the
     <code>instance_eval</code> lines. <code>add</code> appends and leaves them intact.</p>
-    <p><strong>Always pass <code>--no-upgrade</code>.</strong> Without it <code>brew bundle</code> counts <em>outdated</em> as
+    <p><strong><code>--no-upgrade</code> is not optional.</strong> Without it <code>brew bundle</code> counts <em>outdated</em> as
     unsatisfied: <code>check</code> reports installed-but-old packages as missing, and <code>install</code> turns into a mass
     <code>brew upgrade</code> of the whole machine. Upgrading is <code>upd</code>'s job.</p>
-    <p>Put both in <code>~/.profile.local</code> and the flags become unnecessary:<br>
-    <code>export HOMEBREW_BUNDLE_FILE="$HOME/dotfiles/brew/Brewfile.maxbookpro"</code><br>
-    <code>export HOMEBREW_BUNDLE_NO_UPGRADE=1</code></p></div>
+    <p><code>profile.d/10-env.sh</code> sets <code>HOMEBREW_BUNDLE_NO_UPGRADE=1</code> always, and
+    <code>HOMEBREW_BUNDLE_FILE</code> to <code>brew/Brewfile.$(uname -n)</code> lowercased when that file exists — so in a fresh
+    shell <code>brew bundle check</code>, <code>install</code> and <code>cleanup</code> need no flags.
+    Name each machine's file after its hostname (<code>MaxBookPro</code> &rarr; <code>Brewfile.maxbookpro</code>),
+    or set a short hostname with <code>sudo scutil --set LocalHostName …</code>.</p></div>
 
   <div class="card"><h4>not stowed</h4>
     <p><code>brew/</code> (above), <code>wallpapers/</code> (old computer photos), <code>README.md</code>, this manual,

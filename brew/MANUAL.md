@@ -37,6 +37,15 @@ are installed by hand and will not be managed:
 
 Worth re-checking occasionally — `brew info --cask <name>` says if it is back.
 
+## Installed, but cannot be upgraded by Homebrew
+
+| App | Problem |
+|---|---|
+| ocenaudio | The vendor returns **HTTP 403** to curl, so the cask cannot download. Installed and working; it just stays on its current version. Upgrade by hand from ocenaudio.com if you need a newer one. |
+
+`brew bundle check --no-upgrade` is satisfied by these — they are installed. Only
+a plain `check` or `upd` will keep flagging them.
+
 ## Mac App Store
 
 `mas` is **not installed** here. It is worth adding (`brew install mas`) but know
