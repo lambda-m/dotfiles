@@ -223,8 +223,8 @@ Pass package names to stow only those. If <code>git pull</code> refuses because 
     <ul>
       <li><code>brew bundle install --file=… --no-upgrade</code> — installs what is missing. Never removes.</li>
       <li><code>brew bundle check --file=… --no-upgrade</code> — what is missing.</li>
-      <li><code>brew bundle cleanup --file=…</code> — <strong>dry run</strong>: what is installed but unlisted.
-      Only <code>--force</code> actually uninstalls.</li>
+      <li><code>brew bundle cleanup</code> — prints what is installed but unlisted, <strong>asks y/n, then uninstalls</strong>.
+      Not a dry run; answer <kbd>n</kbd> to just look. <code>--force</code> skips the question.</li>
       <li><code>brew bundle add --cask X --install</code> — install and write it down in one step.</li>
     </ul>
     <p><strong>Never <code>brew bundle dump</code> at these paths</strong> — it rewrites the whole file and would destroy the

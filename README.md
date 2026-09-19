@@ -117,8 +117,53 @@ unless you answer `y` in `upd upgrade`. Results live in `~/.local/state/upd`.
 ## What should be installed: `brew/`
 
 `upd` answers "is anything outdated". `brew/` answers "what belongs on this
-machine at all". Layered Brewfiles, one per Mac, applied by hand. Nothing here
-runs automatically: no stow package, no login hook, `bootstrap.sh` ignores it.
+machine at all". Nothing here runs automatically: no stow package, no login
+hook, `bootstrap.sh` ignores it. You run these by hand.
+
+`10-env.sh` already points `brew bundle` at this machine's file, so **no `--file`
+flag is ever needed** in a normal shell.
+
+### I installed something and want to keep it
+
+```
+brew bundle add --cask obsidian --install   # install it AND write it down
+dots sync
+```
+
+`--cask` for apps, nothing for formulae. Add it to `brew/Brewfile.common`
+instead with `--file=brew/Brewfile.common` if all three Macs should have it.
+
+### I pruned the Brewfile and want those apps gone
+
+```
+brew bundle cleanup     # prints the list, asks y/n, then uninstalls
+dots sync
+```
+
+Not a dry run — it asks, then does it. `--force` skips the question.
+
+### Is this machine what the file says?
+
+```
+brew bundle check       # lists anything missing
+brew bundle install     # installs the missing ones
+```
+
+### Setting up another Mac
+
+```
+cd ~/dotfiles && dots sync
+brew bundle cleanup     # 1. what is here that is not written down? (answer n)
+brew bundle check       # 2. what is written down but missing?
+brew bundle add --cask X            # 3. promote keepers, this machine
+brew bundle add --cask X --file=brew/Brewfile.common    #    or all machines
+brew bundle install     # 4. install the rest
+```
+
+Survey first, install last, or you install forty things before seeing what was
+already there.
+
+### The files
 
 ```
 brew/Brewfile.common       # all three Macs: every formula, the universal casks
@@ -128,10 +173,13 @@ brew/Brewfile.air          # + daily-driver extras
 brew/MANUAL.md             # the handful Homebrew cannot install
 ```
 
-The per-machine name is `uname -n`, lowercased — `MaxBookPro` gives
-`Brewfile.maxbookpro`. `10-env.sh` uses that to set `HOMEBREW_BUNDLE_FILE`
-automatically. On a machine whose hostname does not match a file, either rename
-the file or set a short hostname once:
+Each machine file `instance_eval`s the common one (Brewfiles are Ruby), which is
+why one `--file` covers both. Never point a command at `Brewfile.common`
+directly: it has no machine entries, so `cleanup` would offer to remove them all.
+
+The file is chosen by `uname -n`, lowercased — `MaxBookPro` gives
+`Brewfile.maxbookpro`. If a machine's hostname does not match a file, rename the
+file or set a short hostname once:
 
 ```sh
 sudo scutil --set ComputerName mini
@@ -139,55 +187,12 @@ sudo scutil --set HostName mini
 sudo scutil --set LocalHostName mini
 ```
 
-The per-machine files `instance_eval` the common one (Brewfiles are Ruby), so
-you always pass a machine file and never `Brewfile.common` — passing the common
-file alone would make `cleanup` offer to uninstall every machine-specific
-package.
+### Two things that will bite
 
-```
-brew bundle install --file=brew/Brewfile.air --no-upgrade # install what is missing
-brew bundle check   --file=brew/Brewfile.air --no-upgrade # what is missing here
-brew bundle cleanup --file=brew/Brewfile.air              # DRY RUN: what is unlisted
-brew bundle cleanup --file=brew/Brewfile.air --force      # actually uninstall
-```
+**Never run `brew bundle dump` at these paths.** It rewrites the whole file and
+destroys the `instance_eval` lines. `add` appends; dump goes to a scratch path.
 
-**Always pass `--no-upgrade`.** Without it, `brew bundle` treats *outdated* as
-unsatisfied: `check` reports installed-but-old packages as missing, and `install`
-quietly turns into a mass `brew upgrade` of everything on the machine. Upgrading
-is `upd`'s job; these files only answer "is it installed".
-
-Both of these are set for you by `profile.d/10-env.sh` — `HOMEBREW_BUNDLE_NO_UPGRADE`
-always, and `HOMEBREW_BUNDLE_FILE` when a file matching this hostname exists. In
-a fresh shell, `brew bundle check` / `install` / `cleanup` need no flags at all:
-
-```
-brew bundle check      # this machine's manifest, presence only
-brew bundle install    # install what is missing, upgrade nothing
-brew bundle cleanup    # dry run: what is installed but unlisted
-```
-
-Day to day, install and record in one step, then sync:
-
-```
-brew bundle add --cask obsidian --install   # install AND write it down
-brew bundle remove --cask obsidian          # drop the line
-dots sync
-```
-
-**Never run `brew bundle dump` at any of these paths.** It rewrites the whole
-file and would destroy the `instance_eval` lines. `brew bundle add` appends and
-leaves them intact; dump only ever goes to a scratch path.
-
-Setting up a machine, or checking an old one:
-
-```
-cd ~/dotfiles && dots sync
-brew bundle cleanup --file=brew/Brewfile.mini              # 1. what is here, unlisted?
-brew bundle check   --file=brew/Brewfile.mini --no-upgrade # 2. what is listed, missing?
-#    promote keepers with `brew bundle add ... --file=brew/Brewfile.{mini,common}`
-brew bundle install --file=brew/Brewfile.mini              # 3. fill the gaps
-```
-
-Survey before installing, or you install forty things before seeing what is
-already there. Step 1 is always non-destructive, so it doubles as the drift
-check months later.
+**`--no-upgrade` is already set for you** (`HOMEBREW_BUNDLE_NO_UPGRADE=1` in
+`10-env.sh`). Without it `brew bundle` counts *outdated* as missing, so `check`
+cries wolf and `install` turns into a mass upgrade of the whole machine.
+Upgrading is `upd`'s job.
