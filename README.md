@@ -168,7 +168,7 @@ already there.
 ```
 brew/Brewfile.common       # all three Macs: every formula, the universal casks
 brew/Brewfile.maxbookpro   # + everything else (this one is the superset)
-brew/Brewfile.mini         # + office extras
+brew/Brewfile.macmini      # + office extras
 brew/Brewfile.air          # + daily-driver extras
 brew/MANUAL.md             # the handful Homebrew cannot install
 ```
@@ -182,9 +182,9 @@ The file is chosen by `uname -n`, lowercased — `MaxBookPro` gives
 file or set a short hostname once:
 
 ```sh
-sudo scutil --set ComputerName mini
-sudo scutil --set HostName mini
-sudo scutil --set LocalHostName mini
+sudo scutil --set ComputerName MacMini
+sudo scutil --set HostName MacMini
+sudo scutil --set LocalHostName MacMini
 ```
 
 ### Two things that will bite

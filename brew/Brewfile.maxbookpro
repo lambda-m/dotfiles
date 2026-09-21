@@ -90,3 +90,6 @@ cask "filebot"
 cask "naps2"
 # Update maps and software, sync with Garmin Connect and register your device
 cask "garmin-express"
+cask "bettertouchtool"
+# Utility to hide menu bar items
+cask "hiddenbar"
