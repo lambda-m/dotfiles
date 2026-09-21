@@ -6,283 +6,348 @@
 <title>dotfiles manual</title>
 <style>
   :root {
-    --bg: #eceff4; --panel: #ffffff; --fg: #2e3440; --muted: #4c566a;
-    --line: #d8dee9; --accent: #5e81ac; --accent2: #88c0d0; --code-bg: #e5e9f0;
-    --warn-bg: #fdf3e7; --warn-line: #d08770;
+    --ground: #ffffff;
+    --ink: #2e3440;
+    --ink-soft: #4c566a;
+    --rule: #d8dee9;
+    --well: #eceff4;
+    --frost: #5e81ac;
+    --aurora: #bf616a;
+    --aurora-wash: #fbf3f3;
+    --mono: "IosevkaTerm Nerd Font Mono", "Iosevka Term", ui-monospace, Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #2e3440; --panel: #3b4252; --fg: #eceff4; --muted: #d8dee9;
-      --line: #4c566a; --accent: #88c0d0; --accent2: #81a1c1; --code-bg: #434c5e;
-      --warn-bg: #4a4038; --warn-line: #d08770;
+      --ground: #2e3440;
+      --ink: #e5e9f0;
+      --ink-soft: #d8dee9;
+      --rule: #434c5e;
+      --well: #3b4252;
+      --frost: #88c0d0;
+      --aurora: #d08770;
+      --aurora-wash: #3e3a3b;
     }
   }
-  * { box-sizing: border-box; }
   html { color-scheme: light dark; }
-  body { margin: 0; background: var(--bg); color: var(--fg);
-    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
-  .wrap { max-width: 900px; margin: 0 auto; padding: 24px 20px 60px; }
-  header { border-bottom: 2px solid var(--accent); padding-bottom: 8px; margin-bottom: 20px; }
-  header h1 { margin: 0; font-size: 26px; }
-  header p { margin: 4px 0 0; color: var(--muted); }
-  nav { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 12px 0 24px; font-size: 14px; }
-  nav a { color: var(--accent); text-decoration: none; }
-  nav a:hover { text-decoration: underline; }
-  h2 { font-size: 19px; margin: 32px 0 10px; padding-top: 8px; border-top: 1px solid var(--line); }
-  h3 { font-size: 15px; margin: 18px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-  p { margin: 6px 0 10px; }
-  code, pre { font-family: "IosevkaTerm Nerd Font Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; }
-  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
-  pre { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent);
-    padding: 10px 14px; border-radius: 6px; overflow-x: auto; margin: 8px 0 14px; }
-  pre code { background: none; padding: 0; }
-  table { width: 100%; border-collapse: collapse; margin: 8px 0 14px; font-size: 14px; }
-  th, td { text-align: left; vertical-align: top; padding: 6px 8px; border-bottom: 1px solid var(--line); }
-  th { color: var(--muted); font-weight: 600; }
-  td:first-child { white-space: nowrap; }
-  .tldr { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; }
-  .tldr pre { margin: 6px 0; border-left-color: var(--accent2); }
-  .warn { background: var(--warn-bg); border-left: 4px solid var(--warn-line); padding: 8px 12px; border-radius: 4px; margin: 10px 0; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
-  .card h4 { margin: 0 0 6px; font-size: 15px; }
-  .card p, .card ul { margin: 4px 0; font-size: 14px; }
-  .card ul { padding-left: 18px; }
-  a { color: var(--accent); }
-  kbd { font-family: inherit; font-size: 12.5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--panel); }
-  .flow { font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: var(--muted); white-space: pre; overflow-x: auto; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font: 16px/1.55 var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--frost); text-decoration: none; }
+  a:hover, a:focus-visible { text-decoration: underline; }
+  :focus-visible { outline: 2px solid var(--frost); outline-offset: 2px; }
+
+  .page { max-width: 1040px; margin: 0 auto; padding: 40px 24px 96px; }
+  @media (min-width: 900px) {
+    .page { display: grid; grid-template-columns: 176px minmax(0, 1fr); column-gap: 56px; }
+    .page > header { grid-column: 1 / -1; }
+    .rail { position: sticky; top: 32px; align-self: start; }
+  }
+
+  header { margin-bottom: 40px; }
+  header h1 { font: 500 30px/1.15 var(--sans); letter-spacing: -0.01em; margin: 0 0 8px; }
+  header p { margin: 0; color: var(--ink-soft); max-width: 60ch; }
+
+  .rail { margin: 0 0 40px; }
+  .rail ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 20px; }
+  @media (min-width: 900px) {
+    .rail ol { flex-direction: column; gap: 0; border-left: 1px solid var(--rule); }
+    .rail a { display: block; padding: 5px 0 5px 14px; margin-left: -1px; border-left: 1px solid transparent; }
+    .rail a:hover, .rail a:focus-visible { border-left-color: var(--frost); text-decoration: none; }
+  }
+  .rail a { color: var(--ink-soft); font-size: 14.5px; }
+  .rail a:hover { color: var(--frost); }
+
+  main { min-width: 0; max-width: 72ch; }
+  section + section { margin-top: 56px; padding-top: 40px; border-top: 1px solid var(--rule); }
+  h2 { font: 500 23px/1.25 var(--sans); letter-spacing: -0.01em; margin: 0 0 16px; }
+  h3 { font: 600 16px/1.4 var(--sans); margin: 32px 0 8px; }
+  h3 code { font-size: 15px; }
+  p { margin: 0 0 12px; }
+  ul, ol { margin: 0 0 12px; padding-left: 22px; }
+  li { margin: 3px 0; }
+  li p { margin: 0; }
+
+  code, pre, kbd { font-family: var(--mono); }
+  code { font-size: 0.9em; background: var(--well); padding: 1px 4px; border-radius: 3px; }
+  pre {
+    font-size: 13.5px; line-height: 1.5; background: var(--well);
+    padding: 12px 16px; border-radius: 4px; overflow-x: auto; margin: 8px 0 16px;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  kbd { font-size: 12.5px; padding: 0 5px; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 3px; background: var(--ground); }
+
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 16px; font-size: 15px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; color: var(--ink-soft); }
+  td:first-child { white-space: nowrap; padding-right: 20px; }
+  .wide-first td:first-child { white-space: normal; width: 34%; }
+  .table-scroll { overflow-x: auto; }
+
+  .note { background: var(--aurora-wash); border-left: 3px solid var(--aurora); padding: 10px 14px; border-radius: 0 4px 4px 0; margin: 12px 0 16px; }
+  .note p:last-child { margin: 0; }
+  .flow { font-family: var(--mono); font-size: 13.5px; line-height: 1.6; color: var(--ink-soft); white-space: pre; overflow-x: auto; margin: 8px 0 16px; }
+
+  footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--rule); color: var(--ink-soft); font-size: 14px; }
+  @media (min-width: 900px) { footer { grid-column: 2; } }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="page">
 
 <header>
   <h1>dotfiles manual</h1>
-  <p>GNU Stow + git, shared by the Macs and the Linux VMs. Repo: <code>~/dotfiles</code>, branch <code>setup</code>.</p>
+  <p>GNU Stow and git, shared by three Macs and the Linux VMs. The repo is <code>~/dotfiles</code>, branch <code>setup</code>. This page is a map; the repo is the source of truth.</p>
 </header>
 
-<nav>
-  <a href="#tldr">TL;DR</a>
-  <a href="#how">How it fits together</a>
-  <a href="#dots">dots</a>
-  <a href="#upd">upd</a>
-  <a href="#machines">New or existing machine</a>
-  <a href="#packages">Packages</a>
-  <a href="#trouble">When something is off</a>
+<nav class="rail" aria-label="Sections">
+  <ol>
+    <li><a href="#daily">Daily use</a></li>
+    <li><a href="#how">How it fits together</a></li>
+    <li><a href="#dots">dots</a></li>
+    <li><a href="#upd">upd</a></li>
+    <li><a href="#brew">brew</a></li>
+    <li><a href="#machines">Set up a machine</a></li>
+    <li><a href="#packages">Packages</a></li>
+    <li><a href="#trouble">Troubleshooting</a></li>
+  </ol>
 </nav>
 
-<section id="tldr" class="tldr">
-  <strong>Daily use</strong>
-<pre><code>dots            # am I in sync?  (uncommitted / unpushed / unpulled)
+<main>
+
+<section id="daily">
+  <h2>Daily use</h2>
+<pre><code>dots            # am I in sync? (uncommitted, unpushed, unpulled)
 dots sync       # commit everything, pull --rebase, push, restow if needed
 upd             # what is outdated? (brew, npm -g, apt, dnf, pacman)
-upd upgrade     # per manager: show list, ask y/N, upgrade</code></pre>
-  <p>Every new terminal or ssh login prints at most two lines when action is needed:</p>
+upd upgrade     # per manager: show the list, ask y/N, upgrade</code></pre>
+  <p>Every new terminal or ssh login prints at most two lines, and only when something needs attention:</p>
 <pre><code>dotfiles: 2 uncommitted, 1 unpulled  ->  dots sync
 updates: brew 3 (git, tmux, node), npm 1 (ccstatusline)  ->  upd</code></pre>
-  <p>Nothing here ever changes anything without you typing the command or answering <kbd>y</kbd>.</p>
+  <p>Nothing changes anything until you type the command or answer <kbd>y</kbd>.</p>
 </section>
 
-<h2 id="how">How it fits together</h2>
-<p>Each top-level directory is a Stow <em>package</em> that mirrors <code>$HOME</code>. <code>./bootstrap.sh</code> symlinks the
-packages into <code>$HOME</code>, so editing <code>~/.zshrc</code> edits the repo. Stow only folds directories it fully owns;
-the shared ones (<code>~/.config</code>, <code>~/.local/{bin,share,state}</code>) are created as real directories first,
-so installers never write into the repo.</p>
+<section id="how">
+  <h2>How it fits together</h2>
+  <p>Each top-level directory is a Stow <em>package</em> that mirrors <code>$HOME</code>. Running <code>./bootstrap.sh</code> symlinks the packages into <code>$HOME</code>, so editing <code>~/.zshrc</code> edits the repo. Stow folds only directories it fully owns. The shared ones, <code>~/.config</code> and <code>~/.local/{bin,share,state}</code>, are created as real directories first, so installers never write into the repo.</p>
 
-<h3>Shell load order</h3>
-<div class="flow">zsh  : ~/.zshrc  ->  ~/.profile  ->  ~/.local/profile.d/*.sh  ->  ~/.zshrc.local
-bash : ~/.profile (login)  ->  ~/.local/profile.d/*.sh  ->  ~/.bashrc  ->  ~/.bashrc.local
-sh   : ~/.profile  ->  ~/.local/profile.d/*.sh  ->  ~/.profile.local</div>
-<p>Everything cross-shell lives in <code>profile.d</code> and must stay POSIX. Only completion and prompt code go in
-<code>.zshrc</code> / <code>.bashrc</code>.</p>
+  <h3>Shell load order</h3>
+<div class="flow">zsh  : ~/.zshrc  ->  ~/.profile  ->  profile.d/*.sh  ->  ~/.zshrc.local
+bash : ~/.profile (login)  ->  profile.d/*.sh  ->  ~/.bashrc  ->  ~/.bashrc.local
+sh   : ~/.profile  ->  profile.d/*.sh  ->  ~/.profile.local</div>
+  <p>Everything cross-shell lives in <code>~/.local/profile.d</code> and must stay POSIX. Only completion and prompt code go in <code>.zshrc</code> and <code>.bashrc</code>.</p>
 
-<table>
-  <tr><th>profile.d file</th><th>Does</th></tr>
-  <tr><td>00-path.sh</td><td>PATH with <code>path_prepend</code> / <code>path_append</code> (idempotent, skip missing dirs). User dirs win over Homebrew. Installer PATH lines go here, never in an rc file.</td></tr>
-  <tr><td>10-env.sh</td><td><code>EDITOR</code> = <code>emacs-cli</code> when Emacs is installed, else vim, else vi. PAGER, Python, MPS fallback.</td></tr>
-  <tr><td>20-functions.sh</td><td><code>ta</code>, <code>mkcd</code> (see shell package).</td></tr>
-  <tr><td>30-alias.sh</td><td><code>emacs</code>/<code>emacs-gui</code> via emacsclient (only if installed), <code>ll la l</code>, zsh-only <code>noglob ytgrab</code>.</td></tr>
-  <tr><td>50-emacs-daemon.sh</td><td>Starts the Emacs daemon in the background if installed and not running.</td></tr>
-  <tr><td>60-dots-nudge.sh</td><td>The <code>dotfiles:</code> login line.</td></tr>
-  <tr><td>70-upd-nudge.sh</td><td>The <code>updates:</code> login line.</td></tr>
-</table>
+  <table>
+    <tr><th>profile.d file</th><th>What it does</th></tr>
+    <tr><td><code>00-path.sh</code></td><td>Builds PATH with <code>path_prepend</code> and <code>path_append</code>, which are idempotent and skip missing directories. User directories win over Homebrew. Installer PATH lines go here, never in an rc file.</td></tr>
+    <tr><td><code>10-env.sh</code></td><td>Sets <code>EDITOR</code> to <code>emacs-cli</code> when Emacs is installed, else vim, else vi. Also PAGER, Python, the MPS fallback, and the <a href="#brew-file">brew bundle variables</a>.</td></tr>
+    <tr><td><code>20-functions.sh</code></td><td><code>ta</code> and <code>mkcd</code>. See the <a href="#pkg-shell">shell package</a>.</td></tr>
+    <tr><td><code>30-alias.sh</code></td><td><code>emacs</code> and <code>emacs-gui</code> through emacsclient, only if installed; <code>ll</code>, <code>la</code>, <code>l</code>; zsh-only <code>noglob ytgrab</code>.</td></tr>
+    <tr><td><code>50-emacs-daemon.sh</code></td><td>Starts the Emacs daemon in the background if it's installed and not running.</td></tr>
+    <tr><td><code>60-dots-nudge.sh</code></td><td>Prints the <code>dotfiles:</code> login line.</td></tr>
+    <tr><td><code>70-upd-nudge.sh</code></td><td>Prints the <code>updates:</code> login line.</td></tr>
+  </table>
 
-<h3>Machine-local, never committed</h3>
-<p><code>~/.profile.local</code>, <code>~/.bashrc.local</code>, <code>~/.zshrc.local</code> are sourced last if they exist.
-State lives outside the repo: <code>~/.local/state/emacs</code>, <code>~/.local/state/dots</code>, <code>~/.local/state/upd</code>.</p>
+  <h3>Machine-local, never committed</h3>
+  <p><code>~/.profile.local</code>, <code>~/.bashrc.local</code>, and <code>~/.zshrc.local</code> are sourced last if they exist. State lives outside the repo in <code>~/.local/state/emacs</code>, <code>~/.local/state/dots</code>, and <code>~/.local/state/upd</code>.</p>
+</section>
 
-<h2 id="dots">dots: keep the clones in sync</h2>
-<p>Script: <code>shell/.local/bin/dots</code>. Finds the repo through the <code>~/.profile</code> symlink, so the clone can live anywhere (<code>DOTFILES=</code> overrides).</p>
-<table>
-  <tr><th>Command</th><th>Does</th></tr>
-  <tr><td><code>dots</code></td><td>Status: branch, uncommitted files, commits unpushed / unpulled, incoming commit list. No network.</td></tr>
-  <tr><td><code>dots sync [msg]</code></td><td><code>git add -A</code> + commit (message defaults to hostname and date), <code>pull --rebase --autostash</code>, push. If new commits came in, reruns <code>bootstrap.sh</code> so new files get linked.</td></tr>
-  <tr><td><code>dots fetch</code></td><td>Fetch, then status.</td></tr>
-  <tr><td><code>dots stow [pkg..]</code></td><td>Run <code>bootstrap.sh</code> (restow).</td></tr>
-  <tr><td><code>dots git &lt;args&gt;</code></td><td>Any git command inside the repo, from anywhere.</td></tr>
-  <tr><td><code>dots dir</code></td><td>Repo path: <code>cd "$(dots dir)"</code>.</td></tr>
-</table>
-<p>The login nudge fetches from origin in the background at most once a day, with ssh BatchMode so it never prompts or hangs.
-If a rebase conflicts: fix the file, <code>dots git rebase --continue</code>, <code>dots sync</code>.</p>
+<section id="dots">
+  <h2>dots: keep the clones in sync</h2>
+  <p>Script: <code>shell/.local/bin/dots</code>. It finds the repo through the <code>~/.profile</code> symlink, so the clone can live anywhere. Set <code>DOTFILES=</code> to override.</p>
+  <table>
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td><code>dots</code></td><td>Status: branch, uncommitted files, commits unpushed and unpulled, and the incoming commit list. No network.</td></tr>
+    <tr><td><code>dots sync [msg]</code></td><td>Runs <code>git add -A</code> and commits (the message defaults to hostname and date), then <code>pull --rebase --autostash</code>, then push. If new commits came in, reruns <code>bootstrap.sh</code> so new files get linked.</td></tr>
+    <tr><td><code>dots fetch</code></td><td>Fetches, then shows status.</td></tr>
+    <tr><td><code>dots stow [pkg..]</code></td><td>Runs <code>bootstrap.sh</code> (restow).</td></tr>
+    <tr><td><code>dots git &lt;args&gt;</code></td><td>Any git command inside the repo, from anywhere.</td></tr>
+    <tr><td><code>dots dir</code></td><td>Prints the repo path: <code>cd "$(dots dir)"</code>.</td></tr>
+  </table>
+  <p>The login nudge fetches from origin in the background at most once a day, with ssh BatchMode so it never prompts or hangs. If a rebase conflicts, fix the file, then run <code>dots git rebase --continue</code> and <code>dots sync</code>.</p>
+</section>
 
-<h2 id="upd">upd: what is outdated</h2>
-<p>Script: <code>shell/.local/bin/upd</code>. Detects brew, npm globals (excluding npm itself, which follows node), apt, dnf, pacman.
-Results are cached in <code>~/.local/state/upd</code>.</p>
-<table>
-  <tr><th>Command</th><th>Does</th></tr>
-  <tr><td><code>upd</code></td><td>Cached results per manager and the age of the cache.</td></tr>
-  <tr><td><code>upd check</code></td><td>Refresh now: <code>brew update</code> + outdated, <code>npm outdated -g</code>, apt simulation, and so on.</td></tr>
-  <tr><td><code>upd upgrade [mgr]</code></td><td>Per manager: show the list, ask <kbd>y</kbd>/<kbd>N</kbd>, upgrade. Linux managers use sudo at that point only.</td></tr>
-</table>
-<p>The login nudge starts a detached refresh when the cache is older than a day; the first login after that shows nothing yet,
-the next one is accurate. On Debian/Ubuntu the apt result is as fresh as the system's own daily <code>apt update</code> timer.</p>
+<section id="upd">
+  <h2>upd: what is outdated</h2>
+  <p>Script: <code>shell/.local/bin/upd</code>. It detects brew, npm globals (excluding npm itself, which follows node), apt, dnf, and pacman. Results are cached in <code>~/.local/state/upd</code>.</p>
+  <table>
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td><code>upd</code></td><td>Shows the cached results per manager and the age of the cache.</td></tr>
+    <tr><td><code>upd check</code></td><td>Refreshes now: <code>brew update</code> and outdated, <code>npm outdated -g</code>, an apt simulation, and so on.</td></tr>
+    <tr><td><code>upd upgrade [mgr]</code></td><td>Per manager: shows the list, asks <kbd>y</kbd>/<kbd>N</kbd>, upgrades. Linux managers use sudo at that point only.</td></tr>
+  </table>
+  <p>The login nudge starts a detached refresh when the cache is older than a day. The first login after that shows nothing yet; the next one is accurate. On Debian and Ubuntu the apt result is as fresh as the system's own daily <code>apt update</code> timer.</p>
+</section>
 
-<h2 id="machines">New or existing machine</h2>
+<section id="brew">
+  <h2>brew: what should be installed</h2>
+  <p>Where <code>upd</code> asks what is <em>outdated</em>, <code>brew/</code> answers what should be <em>installed</em> on each Mac. It's a set of layered Brewfiles that you run by hand. There's no stow package and no login hook, and <code>bootstrap.sh</code> ignores it.</p>
+
+  <h3>The files</h3>
+  <table>
+    <tr><th>File</th><th>Contents</th></tr>
+    <tr><td><code>Brewfile.common</code></td><td>All three Macs: every formula, the universal casks, VS Code extensions.</td></tr>
+    <tr><td><code>Brewfile.maxbookpro</code></td><td>Common plus everything else. This one is the superset.</td></tr>
+    <tr><td><code>Brewfile.macmini</code></td><td>Common plus office extras.</td></tr>
+    <tr><td><code>Brewfile.air</code></td><td>Common plus daily-driver extras.</td></tr>
+    <tr><td><code>MANUAL.md</code></td><td>The handful of things Homebrew can't install.</td></tr>
+  </table>
+  <p>Brewfiles are Ruby. Each machine file loads the common one with <code>instance_eval</code>, which is why a single file covers both layers. Never point a command at <code>Brewfile.common</code> directly: it has no machine entries, so <code>cleanup</code> would offer to remove them all.</p>
+
+  <h3 id="brew-file">Which file this machine uses</h3>
+  <p>In every shell, <code>10-env.sh</code> derives the file name from the hostname:</p>
+<pre><code>uname -n | cut -d. -f1 | tr '[:upper:]' '[:lower:]'</code></pre>
+  <p>That is the first label of the hostname, lowercased. Hyphens and digits stay. If <code>brew/Brewfile.NAME</code> exists, the script exports it as <code>HOMEBREW_BUNDLE_FILE</code>, and <code>brew bundle</code> needs no <code>--file</code> flag. If no file matches, the variable stays unset and brew looks for a <code>Brewfile</code> in the current directory.</p>
+  <table>
+    <tr><th><code>uname -n</code></th><th>Derived name</th><th>Result</th></tr>
+    <tr><td><code>MaxBookPro</code></td><td><code>maxbookpro</code></td><td><code>Brewfile.maxbookpro</code></td></tr>
+    <tr><td><code>MacMini.local</code></td><td><code>macmini</code></td><td><code>Brewfile.macmini</code></td></tr>
+    <tr><td><code>Maartens-Mac-mini.local</code></td><td><code>maartens-mac-mini</code></td><td>No file. Nothing is set.</td></tr>
+  </table>
+  <p>If a Mac's name doesn't match a file, either rename the file or rename the Mac. To rename the Mac, set all three names so that Finder, Bonjour, and ssh agree:</p>
+<pre><code>sudo scutil --set ComputerName MacMini
+sudo scutil --set HostName MacMini
+sudo scutil --set LocalHostName MacMini</code></pre>
+  <p>Then open a new shell and confirm with <code>echo $HOMEBREW_BUNDLE_FILE</code>.</p>
+
+  <h3>Commands</h3>
+  <table>
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td><code>brew bundle check</code></td><td>Lists what is written down but missing.</td></tr>
+    <tr><td><code>brew bundle install</code></td><td>Installs what is missing. Never removes anything.</td></tr>
+    <tr><td><code>brew bundle cleanup</code></td><td>Prints what is installed but unlisted, asks y/n, then <em>uninstalls</em>. This is not a dry run; answer <kbd>n</kbd> to only look. <code>--force</code> skips the question.</td></tr>
+    <tr><td><code>brew bundle add --cask X --install</code></td><td>Installs a cask and writes it into this machine's file in one step. Omit <code>--cask</code> for formulae. Add <code>--file=brew/Brewfile.common</code> if all three Macs should have it.</td></tr>
+  </table>
+  <p>To survey another Mac, look before you install, or you install forty things before seeing what was already there:</p>
+<pre><code>cd ~/dotfiles &amp;&amp; dots sync
+brew bundle cleanup     # 1. what is here that is not written down? (answer n)
+brew bundle check       # 2. what is written down but missing?
+brew bundle add --cask X                                # 3. keepers, this machine
+brew bundle add --cask X --file=brew/Brewfile.common    #    or all machines
+brew bundle install     # 4. install the rest</code></pre>
+
+  <h3>Two things that bite</h3>
+  <div class="note">
+    <p><strong>Never run <code>brew bundle dump</code> at these paths.</strong> It rewrites the whole file and destroys the <code>instance_eval</code> lines. <code>add</code> appends and leaves them intact. Dump to a scratch path instead.</p>
+  </div>
+  <div class="note">
+    <p><strong><code>--no-upgrade</code> is not optional.</strong> Without it, <code>brew bundle</code> counts outdated as unsatisfied: <code>check</code> reports installed-but-old packages as missing, and <code>install</code> turns into a mass <code>brew upgrade</code> of the whole machine. Upgrading is <code>upd</code>'s job. <code>10-env.sh</code> exports <code>HOMEBREW_BUNDLE_NO_UPGRADE=1</code> for you, so this only matters in a shell that hasn't loaded <code>profile.d</code>.</p>
+  </div>
+</section>
+
+<section id="machines">
+  <h2>Set up a machine</h2>
 <pre><code># new machine
 git clone git@github.com:lambda-m/dotfiles.git ~/dotfiles
-cd ~/dotfiles && ./bootstrap.sh          # then open a new shell
+cd ~/dotfiles &amp;&amp; ./bootstrap.sh          # then open a new shell
 
 # machine that already has the repo but not dots yet
-cd ~/dotfiles && git pull && ./bootstrap.sh
+cd ~/dotfiles &amp;&amp; git pull &amp;&amp; ./bootstrap.sh
 
 # from then on, everywhere
 dots sync</code></pre>
-<p><code>bootstrap.sh</code> creates the shared dirs, repairs a folded <code>~/.local</code>, removes an empty <code>~/.emacs.d</code>, sets
-<code>pull.rebase</code> and <code>push.autoSetupRemote</code>, and stows <code>core shell bash zsh tmux emacs</code> plus <code>ghostty ccstatusline</code> on macOS.
-Pass package names to stow only those. If <code>git pull</code> refuses because of local edits, <code>git stash</code> first and <code>git stash drop</code> afterwards
-(the usual culprit is a tool rewriting its own config file).</p>
+  <p><code>bootstrap.sh</code> creates the shared directories, repairs a folded <code>~/.local</code>, removes an empty <code>~/.emacs.d</code>, sets <code>pull.rebase</code> and <code>push.autoSetupRemote</code>, and stows <code>core shell bash zsh tmux emacs</code>, plus <code>ghostty ccstatusline</code> on macOS. Pass package names to stow only those.</p>
+  <p>If <code>git pull</code> refuses because of local edits, run <code>git stash</code> first and <code>git stash drop</code> afterwards. The usual culprit is a tool rewriting its own config file.</p>
+  <p>On a Mac, follow up with the brew survey in <a href="#brew">brew</a>.</p>
+</section>
 
-<h2 id="packages">Packages: what is special in each</h2>
-<div class="grid">
+<section id="packages">
+  <h2>Packages: what is special in each</h2>
 
-  <div class="card"><h4>core</h4>
-    <p><code>~/.profile</code>: the shared entry point that sources <code>profile.d</code> and, in bash, <code>.bashrc</code>. Rarely touched.</p></div>
+  <h3>core</h3>
+  <p><code>~/.profile</code> is the shared entry point that sources <code>profile.d</code> and, in bash, <code>.bashrc</code>. Rarely touched.</p>
 
-  <div class="card"><h4>shell</h4>
-    <p><code>~/.local/profile.d</code> (table above) and <code>~/.local/bin</code>:</p>
-    <ul>
-      <li><code>dots</code>, <code>upd</code>: this manual.</li>
-      <li><code>ta [name]</code>: tmux attach-or-create, default session <code>main</code>; switches client when already inside tmux. Tab-completes session names.</li>
-      <li><code>mkcd dir</code>: mkdir and cd.</li>
-      <li><code>ytgrab</code>: YouTube downloader with playlist symlinks (bash, needs yt-dlp).</li>
-      <li><code>sshconfig-open host</code> + <code>SSHConfigOpener.app</code>: open an ssh host in a new Ghostty window (macOS).</li>
-    </ul></div>
+  <h3 id="pkg-shell">shell</h3>
+  <p><code>~/.local/profile.d</code> (the table in <a href="#how">How it fits together</a>) and <code>~/.local/bin</code>:</p>
+  <ul>
+    <li><code>dots</code> and <code>upd</code>: this manual.</li>
+    <li><code>ta [name]</code>: tmux attach-or-create, default session <code>main</code>. Switches client when already inside tmux. Tab-completes session names.</li>
+    <li><code>mkcd DIR</code>: mkdir and cd.</li>
+    <li><code>ytgrab</code>: YouTube downloader with playlist symlinks. Bash, needs yt-dlp.</li>
+    <li><code>sshconfig-open HOST</code> and <code>SSHConfigOpener.app</code>: open an ssh host in a new Ghostty window (macOS).</li>
+  </ul>
 
-  <div class="card"><h4>bash, zsh</h4>
-    <p>Thin: bash has <code>ta</code> completion; zsh has the virtualenv-aware prompt, <code>compinit</code> with <code>~/.zsh/completion</code>
-    (custom <code>_make</code>), <code>ta</code> completion, and <code>bindkey -e</code> so the line editor stays Emacs-style even when
-<code>$EDITOR</code> is vim. Both end by sourcing their <code>.local</code> file.</p>
-    <p>Both keep 50k lines of deduplicated history and, when <code>fzf</code> is installed, load its key bindings:</p>
-    <ul>
-      <li><kbd>Ctrl</kbd>+<kbd>R</kbd> fuzzy history: type to filter, arrows to move, <kbd>Enter</kbd> pastes onto the prompt (does not run),
-      <kbd>Esc</kbd> cancels, <kbd>Ctrl</kbd>+<kbd>R</kbd> again toggles time/relevance order. The key hint is shown in the picker.</li>
-      <li><kbd>Ctrl</kbd>+<kbd>T</kbd> insert a file path, <kbd>Alt</kbd>+<kbd>C</kbd> cd into a subdirectory.</li>
-    </ul>
-    <p>Uses <code>fzf --zsh</code>/<code>--bash</code> (fzf 0.48+), else the distro's <code>key-bindings</code> file. Commands starting with a space are not saved.</p></div>
+  <h3>bash and zsh</h3>
+  <p>Both are thin. Bash has <code>ta</code> completion. Zsh has the virtualenv-aware prompt, <code>compinit</code> with <code>~/.zsh/completion</code> (a custom <code>_make</code>), <code>ta</code> completion, and <code>bindkey -e</code> so the line editor stays Emacs-style even when <code>$EDITOR</code> is vim. Both end by sourcing their <code>.local</code> file.</p>
+  <p>Both keep 50,000 lines of deduplicated history, and commands that start with a space aren't saved. When <code>fzf</code> is installed, they load its key bindings, using <code>fzf --zsh</code> or <code>--bash</code> (fzf 0.48 or later), else the distro's <code>key-bindings</code> file:</p>
+  <ul>
+    <li><kbd>Ctrl</kbd>+<kbd>R</kbd> fuzzy history: type to filter, arrows to move, <kbd>Enter</kbd> pastes onto the prompt without running it, <kbd>Esc</kbd> cancels, <kbd>Ctrl</kbd>+<kbd>R</kbd> again toggles time or relevance order. The picker shows the key hint.</li>
+    <li><kbd>Ctrl</kbd>+<kbd>T</kbd> inserts a file path. <kbd>Alt</kbd>+<kbd>C</kbd> changes into a subdirectory.</li>
+  </ul>
 
-  <div class="card"><h4>tmux</h4>
-    <p><code>~/.config/tmux/tmux.conf</code> plus a <code>~/.tmux.conf</code> shim for old tmux. Nord theme, mouse on, 1-based indexes,
-    splits on <kbd>prefix</kbd> <kbd>|</kbd> and <kbd>prefix</kbd> <kbd>-</kbd>. <code>extended-keys on</code> so
-    <kbd>Shift</kbd>+<kbd>Enter</kbd> reaches Claude Code. Reload: <code>tmux source-file ~/.config/tmux/tmux.conf</code>.
-    <a href="https://github.com/tmux/tmux/wiki">tmux wiki</a></p></div>
+  <h3>tmux</h3>
+  <p><code>~/.config/tmux/tmux.conf</code>, plus a <code>~/.tmux.conf</code> shim for old tmux. Nord theme, mouse on, 1-based indexes, splits on <kbd>prefix</kbd> <kbd>|</kbd> and <kbd>prefix</kbd> <kbd>-</kbd>. <code>extended-keys on</code> so <kbd>Shift</kbd>+<kbd>Enter</kbd> reaches Claude Code. Reload with <code>tmux source-file ~/.config/tmux/tmux.conf</code>. See the <a href="https://github.com/tmux/tmux/wiki">tmux wiki</a>.</p>
 
-  <div class="card"><h4>emacs</h4>
-    <p>Config in <code>~/.config/emacs</code>, all state in <code>~/.local/state/emacs</code> (elpa, custom.el, caches). Runs as a daemon;
-    <code>emacs</code> and <code>emacs-cli</code> are terminal clients, <code>emacs-gui</code> opens a frame. Packages via use-package from MELPA
-    (nord-theme, neotree, no-littering, xclip, auto-package-update: asks weekly in the first frame).</p>
-    <ul>
-      <li><kbd>F8</kbd> neotree, <kbd>M</kbd>+arrows move between windows, <kbd>Esc</kbd> quit.</li>
-      <li><kbd>C-c y</kbd> YAML to JSON, <kbd>C-c j</kbd> JSON to YAML (needs <code>yq</code>).</li>
-    </ul>
-    <p>Restart the daemon after config changes: <code>emacsclient -e '(kill-emacs)'</code>, then open <code>emacs</code>.</p></div>
+  <h3>emacs</h3>
+  <p>Config in <code>~/.config/emacs</code>, all state in <code>~/.local/state/emacs</code> (elpa, custom.el, caches). Runs as a daemon: <code>emacs</code> and <code>emacs-cli</code> are terminal clients, <code>emacs-gui</code> opens a frame. Packages come from MELPA through use-package: nord-theme, neotree, no-littering, xclip, and auto-package-update, which asks weekly in the first frame.</p>
+  <ul>
+    <li><kbd>F8</kbd> neotree, <kbd>M</kbd>+arrows move between windows, <kbd>Esc</kbd> quits.</li>
+    <li><kbd>C-c y</kbd> YAML to JSON, <kbd>C-c j</kbd> JSON to YAML. Needs <code>yq</code>.</li>
+  </ul>
+  <p>After config changes, restart the daemon with <code>emacsclient -e '(kill-emacs)'</code>, then open <code>emacs</code>.</p>
 
-  <div class="card"><h4>ghostty (macOS)</h4>
-    <p>Nord, IosevkaTerm Nerd Font 16, left Option as Alt, huge scrollback. <kbd>Cmd</kbd>+<kbd>`</kbd> toggles the quick terminal
-    from anywhere. <a href="https://ghostty.org/docs/config/reference">config reference</a></p></div>
+  <h3>ghostty (macOS)</h3>
+  <p>Nord, IosevkaTerm Nerd Font 16, left Option as Alt, huge scrollback. <kbd>Cmd</kbd>+<kbd>`</kbd> toggles the quick terminal from anywhere. See the <a href="https://ghostty.org/docs/config/reference">Ghostty config reference</a>.</p>
 
-  <div class="card"><h4>ccstatusline (macOS)</h4>
-    <p>Claude Code status line: model, session and weekly usage, context %, git branch and changes, Nord colours. Installed as a
-    global npm package, so <code>upd upgrade npm</code> updates it. It rewrites its own <code>settings.json</code> on version bumps;
-    just <code>dots sync</code> when that shows up. Interactive editor: run <code>ccstatusline</code> in a terminal.
-    <a href="https://github.com/sirmalloc/ccstatusline">github.com/sirmalloc/ccstatusline</a></p></div>
+  <h3>ccstatusline (macOS)</h3>
+  <p>The Claude Code status line: model, session and weekly usage, context percentage, git branch and changes, Nord colors. Installed as a global npm package, so <code>upd upgrade npm</code> updates it. It rewrites its own <code>settings.json</code> on version bumps; when that shows up, run <code>dots sync</code>. For the interactive editor, run <code>ccstatusline</code> in a terminal. See <a href="https://github.com/sirmalloc/ccstatusline">ccstatusline on GitHub</a>.</p>
 
-  <div class="card"><h4>sublime</h4>
-    <p>User settings only: Package Control list, Markdown + MarkdownPreview, LSP-yaml, Terminus colour scheme. Stow it only on
-    machines with Sublime Text (<code>./bootstrap.sh sublime</code>).</p></div>
+  <h3>sublime</h3>
+  <p>User settings only: the Package Control list, Markdown and MarkdownPreview, LSP-yaml, the Terminus color scheme. Stow it only on machines with Sublime Text, with <code>./bootstrap.sh sublime</code>.</p>
 
-  <div class="card"><h4>brew <span style="font-weight:normal">(not stowed)</span></h4>
-    <p>What should be <em>installed</em>, as opposed to <code>upd</code>, which asks what is <em>outdated</em>.
-    Layered Brewfiles, run by hand. No stow package, no login hook, <code>bootstrap.sh</code> ignores it.</p>
-    <ul>
-      <li><code>Brewfile.common</code> — all three Macs: every formula, the universal casks, VS Code extensions.</li>
-      <li><code>Brewfile.maxbookpro</code> / <code>.mini</code> / <code>.air</code> — each <code>instance_eval</code>s common, then adds its own.</li>
-      <li><code>MANUAL.md</code> — the handful Homebrew cannot install.</li>
-    </ul>
-    <p>Always pass a <em>machine</em> file, never <code>Brewfile.common</code>: passing common alone would make
-    <code>cleanup</code> offer to uninstall every machine-specific package.</p>
-    <ul>
-      <li><code>brew bundle install --file=… --no-upgrade</code> — installs what is missing. Never removes.</li>
-      <li><code>brew bundle check --file=… --no-upgrade</code> — what is missing.</li>
-      <li><code>brew bundle cleanup</code> — prints what is installed but unlisted, <strong>asks y/n, then uninstalls</strong>.
-      Not a dry run; answer <kbd>n</kbd> to just look. <code>--force</code> skips the question.</li>
-      <li><code>brew bundle add --cask X --install</code> — install and write it down in one step.</li>
-    </ul>
-    <p><strong>Never <code>brew bundle dump</code> at these paths</strong> — it rewrites the whole file and would destroy the
-    <code>instance_eval</code> lines. <code>add</code> appends and leaves them intact.</p>
-    <p><strong><code>--no-upgrade</code> is not optional.</strong> Without it <code>brew bundle</code> counts <em>outdated</em> as
-    unsatisfied: <code>check</code> reports installed-but-old packages as missing, and <code>install</code> turns into a mass
-    <code>brew upgrade</code> of the whole machine. Upgrading is <code>upd</code>'s job.</p>
-    <p><code>profile.d/10-env.sh</code> sets <code>HOMEBREW_BUNDLE_NO_UPGRADE=1</code> always, and
-    <code>HOMEBREW_BUNDLE_FILE</code> to <code>brew/Brewfile.$(uname -n)</code> lowercased when that file exists — so in a fresh
-    shell <code>brew bundle check</code>, <code>install</code> and <code>cleanup</code> need no flags.
-    Name each machine's file after its hostname (<code>MaxBookPro</code> &rarr; <code>Brewfile.maxbookpro</code>),
-    or set a short hostname with <code>sudo scutil --set LocalHostName …</code>.</p></div>
+  <h3>Not stowed</h3>
+  <p><code>brew/</code> (see <a href="#brew">brew</a>), <code>wallpapers/</code> (old computer photos), <code>README.md</code>, this manual, and <code>.stowrc</code>, which targets <code>$HOME</code> and ignores <code>.DS_Store</code>.</p>
+</section>
 
-  <div class="card"><h4>not stowed</h4>
-    <p><code>brew/</code> (above), <code>wallpapers/</code> (old computer photos), <code>README.md</code>, this manual,
-    <code>.stowrc</code> (target <code>$HOME</code>, ignore <code>.DS_Store</code>).</p></div>
-</div>
+<section id="trouble">
+  <h2>Troubleshooting</h2>
+  <div class="table-scroll">
+  <table class="wide-first">
+    <tr><th>Symptom</th><th>Cause and fix</th></tr>
+    <tr><td>Hundreds of MB untracked under <code>shell/.local/share</code></td>
+        <td>A bare <code>stow shell</code> folded <code>~/.local</code> into a symlink. Run <code>./bootstrap.sh</code>; it moves the foreign files to the real <code>~/.local</code> and restows.</td></tr>
+    <tr><td>Emacs ignores the config</td>
+        <td>A <code>~/.emacs.d</code> or <code>~/.emacs</code> exists and shadows <code>~/.config/emacs</code>. bootstrap removes an empty one; otherwise move it away and restart the daemon.</td></tr>
+    <tr><td>Shift+Enter submits in Claude Code</td>
+        <td>You're in a tmux started before the extended-keys setting. Detach and run <code>ta</code> again.</td></tr>
+    <tr><td>An installer appended lines to <code>~/.zshrc</code></td>
+        <td>That edited the repo. Move the PATH line into <code>00-path.sh</code> with <code>path_append</code>, delete it from the rc file, and run <code>dots sync</code>.</td></tr>
+    <tr><td>Everything works in zsh but nothing works in bash: no <code>ta</code>, no <code>$EDITOR</code>, missing PATH entries</td>
+        <td>A <code>~/.bash_profile</code> exists and shadows <code>~/.profile</code>. Bash login shells read the first of <code>.bash_profile</code>, <code>.bash_login</code>, and <code>.profile</code>, then stop, so <code>profile.d</code> never loads. Installers create it. Move its lines into <code>00-path.sh</code> and delete it. Check with <code>env -i HOME="$HOME" bash -lc 'echo $EDITOR; type -t ta'</code>.</td></tr>
+    <tr><td><code>dots sync</code> says pull failed</td>
+        <td>Rebase conflict. Run <code>dots git status</code>, fix the file, then <code>dots git rebase --continue</code> and <code>dots sync</code>. For ccstatusline's settings.json, take either side.</td></tr>
+    <tr><td><code>dot: can't open sync</code></td>
+        <td>That's Graphviz. The helper is called <code>dots</code>.</td></tr>
+    <tr><td><code>brew bundle</code> ignores this machine's file</td>
+        <td>The hostname doesn't match a file, so <code>HOMEBREW_BUNDLE_FILE</code> is unset. Compare <code>uname -n</code> with the files in <code>brew/</code>, then rename one of them. See <a href="#brew-file">Which file this machine uses</a>.</td></tr>
+    <tr><td><code>brew bundle cleanup</code> wants to remove half the machine</td>
+        <td>You passed <code>Brewfile.common</code> instead of a machine file. Common has no <code>instance_eval</code>, so cleanup never sees the machine-specific entries. Pass a machine file, or no <code>--file</code> at all.</td></tr>
+    <tr><td><code>brew bundle check</code> lists things that <em>are</em> installed</td>
+        <td>They're outdated, and plain <code>check</code> treats outdated as unsatisfied. Add <code>--no-upgrade</code> to ask only whether it's installed. Upgrading is <code>upd</code>'s job.</td></tr>
+    <tr><td><code>brew bundle install</code> started upgrading the whole machine</td>
+        <td>Same cause, worse effect: without <code>--no-upgrade</code> it upgrades every outdated package, not only the missing ones. Set <code>HOMEBREW_BUNDLE_NO_UPGRADE=1</code> in <code>~/.profile.local</code>.</td></tr>
+    <tr><td><code>brew bundle</code> fails en masse with an Xcode error</td>
+        <td>One source-built formula needed a compiler and aborted the batch; everything after it reports "failed" without being touched. Check <code>xcode-select -p</code> against the macOS version. Casks and bottles don't need Xcode, so rerun with <code>--no-upgrade</code>.</td></tr>
+    <tr><td>A cask is registered under an old, renamed token</td>
+        <td>Both tokens claim the same app, so <code>brew uninstall --cask OLD</code> would delete it. Remove only brew's record: <code>rm -rf /opt/homebrew/Caskroom/OLD_TOKEN</code>.</td></tr>
+    <tr><td>A machine Brewfile lost its <code>instance_eval</code> lines</td>
+        <td>Something ran <code>brew bundle dump</code> at that path, and dump rewrites the whole file. Restore from git and use <code>brew bundle add</code> instead, which appends.</td></tr>
+    <tr><td>A cask installs but <code>check</code> still reports it missing</td>
+        <td>Its app was installed by hand at a different version, so <code>--adopt</code> refused. Replace it with <code>brew install --cask --force NAME</code>, which upgrades to the cask's version.</td></tr>
+    <tr><td>Login shows no <code>updates:</code> line although things are outdated</td>
+        <td>The cache is older than a day and a refresh is running in the background. Open the next shell, or run <code>upd check</code>.</td></tr>
+  </table>
+  </div>
+</section>
 
-<h2 id="trouble">When something is off</h2>
-<table>
-  <tr><th>Symptom</th><th>Cause and fix</th></tr>
-  <tr><td>Hundreds of MB untracked under <code>shell/.local/share</code></td>
-      <td><code>~/.local</code> got folded into a symlink by a bare <code>stow shell</code>. Run <code>./bootstrap.sh</code>; it moves the foreign files to the real <code>~/.local</code> and restows.</td></tr>
-  <tr><td>Emacs ignores the config</td>
-      <td>A <code>~/.emacs.d</code> or <code>~/.emacs</code> exists and shadows <code>~/.config/emacs</code>. bootstrap removes an empty one; otherwise move it away and restart the daemon.</td></tr>
-  <tr><td>Shift+Enter submits in Claude Code</td>
-      <td>You are in a tmux started before the extended-keys setting. Detach and <code>ta</code> again.</td></tr>
-  <tr><td>Installer appended lines to <code>~/.zshrc</code></td>
-      <td>That edited the repo. Move the PATH line into <code>00-path.sh</code> with <code>path_append</code>, delete it from the rc file, <code>dots sync</code>.</td></tr>
-  <tr><td>Everything works in zsh but nothing works in bash — no <code>ta</code>, no <code>$EDITOR</code>, missing PATH entries</td>
-      <td>A <code>~/.bash_profile</code> exists and shadows <code>~/.profile</code>: bash login shells read the first of <code>.bash_profile</code>, <code>.bash_login</code>, <code>.profile</code> and stop, so <code>profile.d</code> never loads. Installers create it. Move its lines into <code>00-path.sh</code> and delete it.
-      Check with <code>env -i HOME="$HOME" bash -lc 'echo $EDITOR; type -t ta'</code>.</td></tr>
-  <tr><td><code>dots sync</code> says pull failed</td>
-      <td>Rebase conflict. <code>dots git status</code>, fix, <code>dots git rebase --continue</code>, <code>dots sync</code>. For ccstatusline's settings.json just take either side.</td></tr>
-  <tr><td><code>dot: can't open sync</code></td>
-      <td>That is Graphviz. The helper is called <code>dots</code>.</td></tr>
-  <tr><td><code>brew bundle cleanup</code> wants to remove half the machine</td>
-      <td>You passed <code>Brewfile.common</code> instead of a machine file. Common has no <code>instance_eval</code>, so cleanup never sees the machine-specific entries. Always pass <code>Brewfile.maxbookpro</code>/<code>.mini</code>/<code>.air</code>.</td></tr>
-  <tr><td><code>brew bundle check</code> lists things that <em>are</em> installed</td>
-      <td>They are outdated, and plain <code>check</code> treats outdated as unsatisfied. Add <code>--no-upgrade</code> to ask only "is it installed". Upgrading is <code>upd</code>'s job.</td></tr>
-  <tr><td><code>brew bundle install</code> started upgrading the whole machine</td>
-      <td>Same cause, worse effect: without <code>--no-upgrade</code> it upgrades every outdated package, not just the missing ones. Set <code>HOMEBREW_BUNDLE_NO_UPGRADE=1</code> in <code>~/.profile.local</code>.</td></tr>
-  <tr><td><code>brew bundle</code> fails en masse with an Xcode error</td>
-      <td>One source-built formula needed a compiler and aborted the batch; everything after it reports "failed" without being touched. Check <code>xcode-select -p</code> against the macOS version. Casks and bottles do not need Xcode — rerun with <code>--no-upgrade</code>.</td></tr>
-  <tr><td>A cask is registered under an old, renamed token</td>
-      <td>Both tokens claim the same app, so <code>brew uninstall --cask &lt;old&gt;</code> would delete it. Remove only brew's record: <code>rm -rf /opt/homebrew/Caskroom/&lt;old-token&gt;</code>.</td></tr>
-  <tr><td>A machine Brewfile lost its <code>instance_eval</code> lines</td>
-      <td>Something ran <code>brew bundle dump</code> at that path; dump rewrites the whole file. Restore from git and use <code>brew bundle add --file=…</code> instead, which appends.</td></tr>
-  <tr><td>A cask installs but <code>check</code> still reports it missing</td>
-      <td>Its app was installed by hand at a different version, so <code>--adopt</code> refused. Replace it with <code>brew install --cask --force &lt;name&gt;</code>, which upgrades to the cask's version.</td></tr>
-  <tr><td>Login shows no <code>updates:</code> line although things are outdated</td>
-      <td>Cache older than a day, refresh running in the background. Next shell, or <code>upd check</code>.</td></tr>
-</table>
+</main>
 
-<p style="color: var(--muted); font-size: 13px; margin-top: 30px;">
-  <a href="https://www.gnu.org/software/stow/manual/">GNU Stow manual</a> ·
-  Source of truth is the repo; this page is a map, not the territory.
-</p>
+<footer>
+  <a href="https://www.gnu.org/software/stow/manual/">GNU Stow manual</a>
+</footer>
 
 </div>
 </body>
